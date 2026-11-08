@@ -1,0 +1,9 @@
+# временные артефакты проверок и запусков
+*-verify/
+run-api.log
+run-api.log.err
+*.db
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+actions.json

@@ -1,0 +1,1883 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>АБС-Миграция 2.4 — АРМ системного аналитика</title>
+<meta name="description" content="Оконное приложение системного аналитика: микросервисная платформа миграции банковских данных из legacy-АБС в ЦФТ-Банк.">
+<style>
+  :root{
+    --ink:#1f2229;
+    --text:#545a63;
+    --muted:#8f96a3;
+    --line:#dfe3eb;
+    --line-soft:#eceff5;
+    --red:#d82335;
+    --red-dark:#b81b2b;
+    --red-pale:#fdeef0;
+    --green:#1f8a5b;
+    --green-pale:#e7f4ed;
+    --amber:#a9761b;
+    --amber-pale:#fbf2df;
+    --paper:#fff;
+    --chrome:#eef1f6;
+    --radius:10px;
+    --shadow-win:0 28px 70px rgba(23,28,42,.32), 0 2px 8px rgba(23,28,42,.12);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;color:var(--text);overflow:hidden;
+    font:15.5px/1.55 "Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    background:
+      radial-gradient(900px 600px at 18% 0%, #fbe9eb 0%, rgba(251,233,235,0) 62%),
+      radial-gradient(800px 520px at 92% 12%, #e4ecf7 0%, rgba(228,236,247,0) 58%),
+      linear-gradient(160deg,#eef1f7 0%, #e4e8f1 100%);
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,h4{margin:0;color:var(--ink);font-weight:600;line-height:1.28}
+  p{margin:0}
+  button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+  input,select{font:inherit;color:inherit}
+  :focus-visible{outline:2px solid rgba(216,35,53,.45);outline-offset:2px}
+  .mono{font-family:"Cascadia Mono",Consolas,Menlo,monospace;font-size:13px}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+  .desk{position:fixed;inset:0;display:flex;flex-direction:column;padding:18px 18px 46px;transition:padding .18s ease}
+  body.maxed .desk{padding:0 0 38px}
+
+  .win{background:var(--paper);border:1px solid #cfd5e0;border-radius:var(--radius);box-shadow:var(--shadow-win);display:flex;flex-direction:column;overflow:hidden;flex:1;min-height:0;transition:border-radius .18s ease}
+  .win.max{border-radius:0;border-color:transparent;box-shadow:none}
+  .win.hidden{display:none}
+
+  .titlebar{height:40px;flex:0 0 40px;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(180deg,#f3f5f9,#e9edf4);border-bottom:1px solid #d9dfe9;user-select:none}
+  .tleft{display:flex;align-items:center;gap:10px;padding-left:12px;min-width:0}
+  .appico{width:20px;height:20px;border-radius:5px;background:var(--red);color:#fff;font-size:9.5px;font-weight:700;display:grid;place-items:center}
+  .tleft b{font-size:13.5px;color:#2a2e37;white-space:nowrap}
+  .tleft .doc{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tright{display:flex;height:100%}
+  .cap{width:46px;height:100%;display:grid;place-items:center;font-size:14px;color:#4b515b}
+  .cap:hover{background:#e2e7f0}
+  .cap.close:hover{background:var(--red);color:#fff}
+
+  .menubar{height:34px;flex:0 0 34px;display:flex;align-items:center;gap:2px;padding:0 8px;background:#fbfcfe;border-bottom:1px solid var(--line-soft);position:relative;z-index:30}
+  .menu{position:relative}
+  .menu > button{padding:5px 11px;border-radius:6px;font-size:14px;color:#3c424c}
+  .menu > button:hover,.menu.open > button{background:#eceff5;color:var(--ink)}
+  .dropdown{position:absolute;top:100%;left:0;min-width:250px;background:#fff;border:1px solid var(--line);border-radius:8px;box-shadow:0 18px 40px rgba(23,28,42,.18);padding:6px;display:none}
+  .menu.open .dropdown{display:block}
+  .dropdown button{display:flex;justify-content:space-between;gap:20px;width:100%;text-align:left;padding:8px 10px;border-radius:6px;font-size:14px;color:#3c424c}
+  .dropdown button:hover{background:var(--red-pale);color:var(--red)}
+  .dropdown button:disabled{color:#c0c5cd;background:none;cursor:default}
+  .dropdown .sep{height:1px;background:var(--line-soft);margin:5px 2px}
+  .dropdown .key{color:var(--muted);font-size:12px}
+
+  .toolbar{height:56px;flex:0 0 56px;display:flex;align-items:center;gap:9px;padding:0 12px;background:#fff;border-bottom:1px solid var(--line-soft)}
+  .tb-btn{display:inline-flex;align-items:center;gap:7px;padding:7px 13px;border-radius:8px;border:1px solid var(--line);background:#fff;font-size:13.5px;color:#3c424c;white-space:nowrap}
+  .tb-btn:hover{border-color:#e6bcc2;color:var(--red)}
+  .tb-btn.primary{background:var(--red);border-color:var(--red);color:#fff;font-weight:600}
+  .tb-btn.primary:hover{background:var(--red-dark);border-color:var(--red-dark);color:#fff}
+  .tb-btn[disabled]{opacity:.55;cursor:not-allowed}
+  .tb-sep{width:1px;height:26px;background:var(--line-soft);margin:0 3px}
+  .waves{display:flex;gap:4px;padding:3px;background:#f4f6fa;border:1px solid var(--line-soft);border-radius:9px}
+  .wave{font-size:12.5px;padding:4px 10px;border-radius:6px;color:#5b6270}
+  .wave.on{background:#fff;color:var(--red);font-weight:600;box-shadow:0 1px 3px rgba(23,28,42,.12)}
+  .tb-field{display:flex;align-items:center;gap:8px;margin-left:auto}
+  .tb-field input{border:1px solid var(--line);border-radius:8px;padding:7px 12px;font-size:13.5px;width:280px;background:#fbfcfe}
+
+  .body{flex:1;display:grid;grid-template-columns:248px 1fr 272px;min-height:0;background:#fbfbfe}
+  .rail{background:#fff;border-right:1px solid var(--line-soft);padding:10px 0 14px;overflow:auto}
+  .rail .group{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);padding:12px 16px 5px;font-weight:600}
+  .nav{display:flex;align-items:center;gap:9px;width:100%;text-align:left;padding:8px 16px;font-size:13.5px;color:#454b55;border-left:2px solid transparent}
+  .nav i{font-style:normal;font-size:10.5px;color:var(--muted);width:18px}
+  .nav:hover{background:#fafbfe;color:var(--red)}
+  .nav.on{background:var(--red-pale);color:var(--red);border-left-color:var(--red);font-weight:600}
+  .nav.on i{color:var(--red)}
+  .nav .cnt{margin-left:auto;font-size:10.5px;color:#6b7280;background:#f2f3f7;border-radius:999px;padding:1px 7px}
+  .nav .cnt.hot{background:var(--red-pale);color:var(--red);font-weight:600}
+
+  .pane{overflow:auto;padding:22px 26px 30px;min-width:0}
+  .pane h1{font-size:25px;letter-spacing:-.01em}
+  .pane .sub{font-size:14px;color:var(--text);margin-top:6px;max-width:780px}
+  .pane-head{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;margin-bottom:16px;flex-wrap:wrap}
+  .pane-head .actions{display:flex;gap:8px;flex-wrap:wrap}
+  .pill-wave{font-size:12.5px;color:#545a63;border:1px solid var(--line);border-radius:999px;padding:5px 12px;background:#fff}
+
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));gap:12px;margin-bottom:16px}
+  .kpi{background:#fff;border:1px solid var(--line-soft);border-radius:8px;padding:13px 15px}
+  .kpi b{display:block;font-size:22px;color:var(--ink);letter-spacing:-.02em;line-height:1.15}
+  .kpi span{display:block;margin-top:4px;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+
+  .panel{background:#fff;border:1px solid var(--line-soft);border-radius:8px;margin-bottom:14px}
+  .panel-head{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:12px 16px;border-bottom:1px solid var(--line-soft);flex-wrap:wrap}
+  .panel-head h2{font-size:15px}
+  .panel-head .hint{font-size:12.5px;color:var(--muted)}
+  .panel-head .tools{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+  .panel-body{padding:6px 16px 10px}
+  .panel-body.flush{padding:0}
+
+  table.grid{width:100%;border-collapse:collapse;font-size:13.5px}
+  table.grid th{text-align:left;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600;padding:9px 12px 9px 0;border-bottom:1px solid var(--line);white-space:nowrap}
+  table.grid td{padding:10px 12px 10px 0;border-bottom:1px solid var(--line-soft);vertical-align:middle}
+  table.grid tbody tr:hover{background:#fdfbfc}
+  table.grid tbody tr.sel{background:var(--red-pale)}
+  table.grid td.name{color:var(--ink);font-weight:600}
+  table.grid tr.clickable{cursor:pointer}
+  table.grid tfoot td{padding-top:12px;font-weight:600;color:var(--ink);border-bottom:0}
+  table.grid th.sortable{cursor:pointer;user-select:none}
+  table.grid th.sortable:hover{color:var(--red)}
+  table.grid th.sortable::after{content:"↕";margin-left:6px;opacity:.32;font-size:9px}
+  table.grid th.sortable.asc::after{content:"↑";opacity:.9;color:var(--red)}
+  table.grid th.sortable.desc::after{content:"↓";opacity:.9;color:var(--red)}
+  .pager{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 16px;border-top:1px solid var(--line-soft);font-size:12px;color:var(--muted)}
+  .right{text-align:right}
+
+  .badge{display:inline-block;font-size:11px;letter-spacing:.05em;text-transform:uppercase;padding:3px 9px;border-radius:999px;white-space:nowrap}
+  .badge.ok{background:var(--green-pale);color:var(--green)}
+  .badge.watch{background:var(--amber-pale);color:var(--amber)}
+  .badge.risk{background:var(--red-pale);color:var(--red)}
+  .badge.gray{background:#f1f3f7;color:#6b7280}
+
+  .bar{height:6px;border-radius:999px;background:#f0f2f7;overflow:hidden;min-width:64px}
+  .bar i{display:block;height:100%;background:var(--red);border-radius:999px}
+  .bar i.green{background:var(--green)}
+  .bar i.amber{background:#dfa63c}
+  .meter{display:flex;align-items:center;gap:8px}
+  .meter .bar{flex:1}
+  .num{font-size:11.5px;color:var(--muted);white-space:nowrap}
+
+  .btn{display:inline-flex;align-items:center;gap:7px;padding:7px 13px;border-radius:7px;background:var(--red);color:#fff;font-weight:600;font-size:13px}
+  .btn:hover{background:var(--red-dark)}
+  .btn[disabled]{opacity:.5;cursor:not-allowed;background:var(--red)}
+  .btn.ghost{background:#fff;border:1px solid #efc6cd;color:var(--red)}
+  .btn.ghost:hover{background:var(--red-pale)}
+  .btn.quiet{background:#fff;border:1px solid var(--line);color:#454b55}
+  .btn.quiet:hover{border-color:#e6bcc2;color:var(--red)}
+  .btn.small{padding:5px 10px;font-size:12px}
+
+  .chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 12px;font-size:12.5px;color:#545a63}
+  .chip:hover{border-color:#e6bcc2;color:var(--red)}
+  .chip.on{background:var(--red);border-color:var(--red);color:#fff}
+  .chip i{font-style:normal;opacity:.6;margin-left:5px;font-size:11px}
+  .toolbar-inline{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+
+  .empty{padding:18px;border:1px dashed var(--line);border-radius:8px;color:var(--muted);font-size:13.5px;text-align:center}
+
+  .side{background:#fff;border-left:1px solid var(--line-soft);padding:14px 14px 18px;overflow:auto}
+  .side h3{font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+  .svc-row{display:flex;align-items:center;gap:9px;padding:8px 0;border-bottom:1px dashed var(--line-soft);font-size:12.5px;text-align:left;width:100%}
+  .svc-row:last-child{border-bottom:0}
+  .svc-row:hover b{color:var(--red)}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--green);flex:0 0 8px}
+  .dot.warn{background:#dfa63c}
+  .svc-row b{color:var(--ink);font-weight:600;font-size:12.5px}
+  .svc-row span{color:var(--muted);font-size:11.5px}
+  .svc-num{margin-left:auto;text-align:right;color:var(--muted);font-size:11.5px;line-height:1.3}
+
+  .statusbar{height:30px;flex:0 0 30px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;background:#f4f6fa;border-top:1px solid #dde2ec;font-size:12px;color:#6b7280;gap:14px}
+  .statusbar b{color:#3c424c;font-weight:600}
+  .statusbar .l,.statusbar .r{display:flex;gap:14px;align-items:center;min-width:0}
+  .jobbar{display:flex;align-items:center;gap:8px;font-size:11.5px}
+  .jobbar .bar{width:96px;height:5px}
+
+  .float{position:fixed;right:42px;bottom:74px;width:540px;max-width:calc(100% - 36px);background:#fff;border:1px solid #cfd5e0;border-radius:10px;box-shadow:0 24px 60px rgba(23,28,42,.28);display:flex;flex-direction:column;overflow:hidden;z-index:40}
+  .float.hidden{display:none}
+  .float .log{background:#1f2229;color:#d6dae2;padding:12px 14px;height:196px;overflow:auto;font-family:"Cascadia Mono",Consolas,Menlo,monospace;font-size:12px;line-height:1.7}
+  .float .log b{color:#ff8e9b;font-weight:600}
+  .float .log .ok{color:#7ddca6}
+  .float .log .t{color:#7c8492}
+
+  .modal{position:fixed;inset:0;background:rgba(23,28,42,.34);display:none;place-items:center;z-index:60;padding:20px}
+  .modal.on{display:grid}
+  .dialog{width:580px;max-width:100%;background:#fff;border:1px solid #cfd5e0;border-radius:12px;box-shadow:0 30px 70px rgba(23,28,42,.35);overflow:hidden}
+  .dialog.wide{width:680px}
+  .dhead{padding:15px 20px;border-bottom:1px solid var(--line-soft);display:flex;justify-content:space-between;align-items:center;gap:12px}
+  .dhead h3{font-size:16px}
+  .dbody{padding:18px 20px;display:grid;gap:12px;max-height:70vh;overflow:auto}
+  .dfoot{padding:13px 20px;border-top:1px solid var(--line-soft);display:flex;justify-content:flex-end;gap:10px;background:#fbfcfe}
+  .checkline{display:flex;gap:10px;align-items:flex-start;font-size:13.5px}
+  .checkline input{margin-top:3px;accent-color:var(--red)}
+  .dnote{font-size:12.5px;color:var(--muted);background:#f7f8fc;border:1px solid var(--line-soft);border-radius:8px;padding:10px 12px}
+
+  .kv{display:grid;grid-template-columns:186px 1fr;gap:9px 16px;font-size:13.5px}
+  .kv dt{color:var(--muted);font-size:12.5px}
+  .kv dd{margin:0;color:var(--ink)}
+  .kv dd.mono{font-size:12.5px}
+
+  .toasts{position:fixed;right:22px;top:14px;z-index:90;display:flex;flex-direction:column;gap:8px;pointer-events:none}  .toast{background:#fff;border:1px solid var(--line);border-left:3px solid var(--green);border-radius:8px;padding:10px 14px;box-shadow:0 12px 30px rgba(23,28,42,.16);font-size:13px;color:#33383d;min-width:260px;animation:toastIn .18s ease}
+  .toast.warn{border-left-color:#dfa63c}
+  .toast.err{border-left-color:var(--red)}
+  @keyframes toastIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+
+  .taskbar{position:fixed;left:0;right:0;bottom:0;height:38px;background:rgba(238,241,246,.94);border-top:1px solid #d6dce6;display:flex;align-items:center;gap:8px;padding:0 12px;backdrop-filter:blur(8px);z-index:50}
+  .task{display:flex;align-items:center;gap:8px;padding:5px 12px;border-radius:7px;background:#fff;border:1px solid #d9dfe9;font-size:12px;color:#3c424c}
+  .task:hover{border-color:#e6bcc2;color:var(--red)}
+  .task i{width:14px;height:14px;border-radius:4px;background:var(--red);display:block}
+  .clock{margin-left:auto;font-size:12px;color:#5b6270}
+
+  .topo{width:100%;height:auto;display:block}
+  .api td.code{font-family:"Cascadia Mono",Consolas,Menlo,monospace;font-size:12.5px;color:#33383d}
+  .copy{font-size:11.5px;color:var(--muted)}
+  .copy:hover{color:var(--red)}
+
+  .gate{position:fixed;inset:0;z-index:70;display:grid;place-items:center;padding:20px;background:rgba(23,28,42,.45);backdrop-filter:blur(3px)}
+  .gate.hidden{display:none}
+  .gate-card{width:420px;max-width:100%;background:#fff;border:1px solid #cfd5e0;border-radius:12px;box-shadow:0 30px 70px rgba(23,28,42,.4);padding:24px;display:grid;gap:12px}
+  .gate-brand{display:flex;align-items:center;gap:10px}
+  .gate-brand b{font-size:15px;color:var(--ink)}
+  .gate-sub{font-size:12.5px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+  .gate-card label{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600}
+  .gate-card input{width:100%;border:1px solid var(--line);border-radius:8px;padding:9px 12px;font-size:14px;background:#fbfcfe}
+  .gate-card input:focus{outline:2px solid #f3c2c8;border-color:#eab6bd;background:#fff}
+  .gate-roles{display:flex;gap:6px;flex-wrap:wrap}
+  .gate-note{font-size:11.5px;color:var(--muted);min-height:16px}
+  .userchip{display:flex;align-items:center;gap:8px;padding-left:10px;border-left:1px solid var(--line-soft);margin-left:2px}
+  .userchip.hidden{display:none}
+  .uchip-name{font-size:12.5px;color:var(--ink);font-weight:600;line-height:1.2}
+  .uchip-role{font-size:11px;color:var(--muted);line-height:1.2}
+
+  .chat{display:flex;flex-direction:column;gap:10px;margin-bottom:12px;max-height:340px;overflow:auto;padding-right:4px}
+  .msg{border-radius:10px;padding:10px 13px;font-size:13.5px;line-height:1.55;max-width:88%}
+  .msg.q{background:var(--red-pale);color:#7c1724;align-self:flex-end}
+  .msg.a{background:#fff;border:1px solid var(--line-soft)}
+  .msg.typing{background:#fff;border:1px dashed var(--line);color:var(--muted)}
+  .chatbar{display:flex;gap:8px}
+  .chatbar input{flex:1;border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-size:13.5px}
+
+  .chart{display:flex;flex-direction:column;gap:9px;padding:4px 0 6px}
+  .chart-row{display:grid;grid-template-columns:118px 1fr 44px;gap:10px;align-items:center;font-size:12.5px;color:#454b55}
+  .legend{display:flex;gap:14px;font-size:11.5px;color:var(--muted);margin-top:6px}
+  .legend span{display:flex;align-items:center;gap:6px}
+  .swatch{width:10px;height:10px;border-radius:3px;background:var(--red);display:block}
+  .swatch.green{background:var(--green)}
+
+  @media (max-width:1180px){ .body{grid-template-columns:214px 1fr} .side{display:none} }
+  @media (max-width:860px){
+    body.maxed .desk{padding:0 0 38px}
+    .desk{padding:8px 8px 44px}
+    .body{grid-template-columns:1fr}
+    .rail{display:flex;overflow-x:auto;border-right:0;border-bottom:1px solid var(--line-soft);padding:6px}
+    .rail .group{display:none}
+    .nav{white-space:nowrap;border-left:0;border-bottom:2px solid transparent}
+    .nav.on{border-left:0;border-bottom-color:var(--red)}
+    .nav .cnt{display:none}
+    .pane{padding:16px}
+    .toolbar{overflow-x:auto;height:auto;padding:8px 10px;flex-wrap:nowrap;gap:6px}
+    .tb-field{display:none}
+    .float{right:8px;left:8px;width:auto;bottom:56px}
+    .statusbar{font-size:11px}
+    .statusbar .r{display:none}
+    .kpis{grid-template-columns:1fr 1fr}
+  }
+</style>
+</head>
+<body>
+<h1 class="sr-only">АБС-Миграция 2.4 — АРМ системного аналитика миграции банковских данных</h1>
+
+<div class="desk">
+  <section class="win" id="win">
+    <div class="titlebar" id="titlebar">
+      <div class="tleft">
+        <span class="appico">АБС</span>
+        <b>АБС-Миграция 2.4</b>
+        <span class="doc" id="doc-title">— карта данных · волна 5 · прод-контур</span>
+      </div>
+      <div class="tright" id="winctl">
+        <button class="cap" data-win="min" aria-label="Свернуть окно">—</button>
+        <button class="cap" data-win="max" aria-label="Развернуть окно" id="maxbtn">□</button>
+        <button class="cap close" data-win="close" aria-label="Закрыть окно">✕</button>
+      </div>
+    </div>
+
+    <div class="menubar" id="menubar"></div>
+
+    <div class="toolbar">
+      <button class="tb-btn primary" data-act="run-wave">▶ Запустить загрузку</button>
+      <button class="tb-btn" data-act="reconcile">⇄ Сверка</button>
+      <button class="tb-btn" data-act="open-log">Журнал</button>
+      <span class="tb-sep"></span>
+      <div class="waves" id="waves"></div>
+      <span class="tb-sep"></span>
+      <button class="tb-btn" data-act="go-svc">Топология</button>
+      <button class="tb-btn" data-act="csv">CSV</button>
+      <button class="tb-btn" data-act="connect" title="Переподключиться к FastAPI">⇅ API</button>
+      <div class="tb-field">
+        <input type="text" id="q" placeholder="Поиск по счетам, полям, документам" aria-label="Поиск">
+        <button class="tb-btn" data-act="refresh" aria-label="Обновить данные">⟳</button>
+      </div>
+      <div class="userchip hidden" id="userchip"></div>
+    </div>
+
+    <div class="body">
+      <nav class="rail" id="rail"></nav>
+      <main class="pane" id="pane"></main>
+      <aside class="side" id="side"></aside>
+    </div>
+
+    <div class="statusbar">
+      <div class="l">
+        <span>PostgreSQL 16 · <b>mig@db-prod-2</b> · pool 12/50</span>
+        <span id="mode">демо-режим</span>
+        <span id="job"></span>
+      </div>
+      <div class="r">
+        <span><b id="online">8</b> сервисов online</span>
+        <span>2 102 теста · ruff 0</span>
+        <span id="clock">08.11.2026 · 20:44</span>
+      </div>
+    </div>
+  </section>
+</div>
+
+<section class="float" id="logwin" aria-label="Журнал волны">
+  <div class="titlebar" style="height:34px;flex:0 0 34px">
+    <div class="tleft"><span class="appico" style="background:#3c424c">LOG</span><b>Журнал волны 5</b></div>
+    <div class="tright">
+      <button class="cap" data-log="clear" aria-label="Очистить журнал">⌫</button>
+      <button class="cap close" data-log="close" aria-label="Закрыть журнал">✕</button>
+    </div>
+  </div>
+  <div class="log" id="log"></div>
+</section>
+
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+  <div class="dialog">
+    <div class="dhead">
+      <h3 id="modal-title">Запуск загрузки волны 5</h3>
+      <button class="cap" data-modal="close" aria-label="Закрыть диалог">✕</button>
+    </div>
+    <div class="dbody">
+      <div class="dnote">Домен: РКО и счета · источник PROGRAMBANK, GEFEST · приёмник ЦФТ-Банк (IBSO). Предпроверочные гейты обязательны: загрузка без сверки не стартует.</div>
+      <label class="checkline"><input type="checkbox" checked> Карта данных подтверждена</label>
+      <label class="checkline"><input type="checkbox" checked> Качество данных: критичных нарушений нет</label>
+      <label class="checkline"><input type="checkbox" checked> Сверка остатков прошлой волны закрыта</label>
+      <label class="checkline"><input type="checkbox"> Точка отката зафиксирована в cut-over</label>
+    </div>
+    <div class="dfoot">
+      <button class="btn quiet" data-modal="close">Отмена</button>
+      <button class="btn" data-modal="start">Запустить</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="inspect" role="dialog" aria-modal="true" aria-labelledby="inspect-title">
+  <div class="dialog wide">
+    <div class="dhead">
+      <h3 id="inspect-title">Запись</h3>
+      <button class="cap" data-inspect="close" aria-label="Закрыть карточку">✕</button>
+    </div>
+    <div class="dbody" id="inspect-body"></div>
+    <div class="dfoot">
+      <button class="btn quiet" data-inspect="close">Закрыть</button>
+      <button class="btn" data-inspect="act">Действие по записи</button>
+    </div>
+  </div>
+</div>
+
+<div class="gate hidden" id="gate" role="dialog" aria-modal="true" aria-labelledby="gate-title">
+  <div class="gate-card">
+    <div class="gate-brand"><span class="appico">АБС</span><b id="gate-title">АБС-Миграция 2.4 · вход</b></div>
+    <div class="gate-sub">Роли: аналитик · архитектор · аудитор</div>
+    <div class="gate-roles">
+      <button class="chip" data-act="role" data-user="analyst">Аналитик</button>
+      <button class="chip" data-act="role" data-user="architect">Архитектор</button>
+      <button class="chip" data-act="role" data-user="auditor">Аудитор</button>
+    </div>
+    <div>
+      <label for="login-user">Пользователь</label>
+      <input id="login-user" type="text" value="analyst" autocomplete="username">
+    </div>
+    <div>
+      <label for="login-pass">Пароль</label>
+      <input id="login-pass" type="password" value="analyst123" autocomplete="current-password">
+    </div>
+    <div class="toolbar-inline">
+      <button class="btn" data-act="login">Войти</button>
+      <button class="btn quiet" data-act="login-demo">Демо-режим</button>
+    </div>
+    <div class="gate-note" id="gate-note">analyst / analyst123 · architect / architect123 · auditor / auditor123</div>
+  </div>
+</div>
+
+<div class="toasts" id="toasts" aria-live="polite"></div>
+<div class="taskbar" id="taskbar"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  var SCREENS = [
+    { id: "map", num: "01", name: "Карта данных", group: "Данные" },
+    { id: "dq", num: "02", name: "Качество данных", group: "Данные" },
+    { id: "recon", num: "03", name: "Сверка остатков", group: "Данные" },
+    { id: "rules", num: "04", name: "Правила → SQL", group: "Процессы" },
+    { id: "post", num: "05", name: "Проводки", group: "Процессы" },
+    { id: "cutover", num: "06", name: "Cut-over", group: "Процессы" },
+    { id: "chat", num: "07", name: "Ассистент", group: "Аналитика" },
+    { id: "tower", num: "08", name: "Готовность", group: "Аналитика" },
+    { id: "svc", num: "09", name: "Микросервисы", group: "Аналитика" },
+    { id: "audit", num: "10", name: "Аудит", group: "Аналитика" }
+  ];
+
+  var MENUS = [
+    { name: "Файл", items: [["Открыть конфигурацию волны", "noop", "Ctrl+O", false], ["Экспорт отчёта сверки", "export", "Ctrl+E", false], ["sep"], ["Свернуть окно", "close", "Alt+F4", false]] },
+    { name: "Правка", items: [["Подтвердить авто-мэтч", "confirm-auto", "", false], ["Сбросить фильтры", "reset", "", false]] },
+    { name: "Вид", items: [["Карта данных", "go-map", "", false], ["Микросервисы", "go-svc", "", false], ["Журнал волны", "open-log", "F12", false]] },
+    { name: "Миграция", items: [["Запустить загрузку", "run-wave", "F5", false], ["Сверка остатков", "reconcile", "F9", false], ["Запустить тесты", "tests", "", true]] },
+    { name: "Сервисы", items: [["Статус сервисов", "go-svc", "", false], ["Перечитать конфиг", "refresh", "", false], ["API-контракты", "go-svc", "", false]] },
+    { name: "Справка", items: [["О приложении", "about", "", false], ["Горячие клавиши", "noop", "", false]] }
+  ];
+
+  var MAPPING = [
+    { src: "PAYMENT_DOC.SUMMA", type: "NUMBER(15,2)", dom: "РКО", tgt: "AMOUNT", score: 100, auto: true, api: "POST /api/v1/s2t/confirm" },
+    { src: "PAYMENT_DOC.DATA_DOC", type: "DATE", dom: "РКО", tgt: "DOC_DATE", score: 100, auto: true, api: "POST /api/v1/s2t/confirm" },
+    { src: "PAYMENT_DOC.NSCHET", type: "VARCHAR2(20)", dom: "РКО", tgt: "PAYER_ACCOUNT", score: 67, auto: false, api: "POST /api/v1/s2t/confirm" },
+    { src: "PAYMENT_DOC.VAL", type: "CHAR(3)", dom: "РКО", tgt: "CURRENCY", score: 100, auto: true, api: "POST /api/v1/s2t/confirm" },
+    { src: "CLIENT.NAIM", type: "VARCHAR2(120)", dom: "Клиенты", tgt: "CLIENT_NAME", score: 67, auto: false, api: "POST /api/v1/s2t/confirm" },
+    { src: "CLIENT.KOD", type: "NUMBER(10)", dom: "Клиенты", tgt: "CLIENT_CODE", score: 67, auto: false, api: "POST /api/v1/s2t/confirm" },
+    { src: "CREDIT.KREDIT_ID", type: "NUMBER(10)", dom: "Кредиты", tgt: "CREDIT_ID", score: 100, auto: true, api: "POST /api/v1/s2t/confirm" },
+    { src: "CREDIT.SUMMA_VYDACHI", type: "NUMBER(15,2)", dom: "Кредиты", tgt: "CREDIT_AMOUNT", score: 50, auto: false, api: "POST /api/v1/s2t/confirm" },
+    { src: "DEPOSIT.OSTATOK", type: "NUMBER(15,2)", dom: "Депозиты", tgt: "BALANCE", score: 50, auto: false, api: "POST /api/v1/s2t/confirm" },
+    { src: "POSTING.SCHET_DT", type: "VARCHAR2(20)", dom: "Проводки", tgt: "ACCOUNT_DT", score: 100, auto: true, api: "POST /api/v1/s2t/confirm" },
+    { src: "POSTING.SCHET_KT", type: "VARCHAR2(20)", dom: "Проводки", tgt: "ACCOUNT_KT", score: 100, auto: true, api: "POST /api/v1/s2t/confirm" },
+    { src: "SCHET.BIK", type: "CHAR(9)", dom: "Счета", tgt: "BIK", score: 100, auto: true, api: "POST /api/v1/s2t/confirm" }
+  ];
+
+  var RECON = [
+    { account: "40817810000000000001", cur: "RUB", legacy: 125000.0, cft: 125000.0, cause: "rounding" },
+    { account: "40702810000000000011", cur: "RUB", legacy: 1743000.0, cft: 1735000.0, cause: "missing_posting" },
+    { account: "47427810000000000021", cur: "RUB", legacy: 43700.0, cft: 43700.01, cause: "rounding" },
+    { account: "40817810000000000001", cur: "USD", legacy: 1500.0, cft: 1512.4, cause: "rate" },
+    { account: "30102810000000000041", cur: "RUB", legacy: 500000.0, cft: 500000.0, cause: "rounding" },
+    { account: "47400810000000000062", cur: "RUB", legacy: 0.0, cft: 345.6, cause: "manual" }
+  ];
+
+  var CAUSE = { rounding: "округление", rate: "курсовая разница", missing_posting: "пропущенная проводка", duplicate: "дубль операции", manual: "ручная корректировка" };
+
+  var POSTINGS = [
+    { account: "47427810000000000021", date: "2026-11-03", dt: 112500.0, kt: 112500.0 },
+    { account: "47427810000000000022", date: "2026-11-03", dt: 43000.0, kt: 43000.5 },
+    { account: "40702810000000000011", date: "2026-11-03", dt: 2500000.0, kt: 2500000.0 },
+    { account: "70601810000000000071", date: "2026-11-04", dt: 310000.0, kt: 309999.99 },
+    { account: "47400810000000000062", date: "2026-10-31", dt: 0.0, kt: 345.6 }
+  ];
+
+  var CLIENTS = [
+    { id: "CL-0001", inn: "7707083893", bik: "044525225", acc: "40817810099910004312", bal: 125000.0 },
+    { id: "CL-0002", inn: "7707083894", bik: "044525225", acc: "40817810099910004313", bal: 8400.5 },
+    { id: "CL-0004", inn: "770708389", bik: "044525225", acc: "40817810099910004314", bal: 12500.0 },
+    { id: "CL-0006", inn: "7707083893", bik: "444525225", acc: "40817810099910004316", bal: 77000.0 },
+    { id: "CL-0011", inn: "7707083893", bik: "044525226", acc: "40817810099910004318", bal: -64000.0 },
+    { id: "CL-0012", inn: "7830000001", bik: "044030653", acc: "408178104000000000", bal: 200.0 }
+  ];
+
+  var DQ_RULES = ["ИНН: контрольное число", "БИК: 9 цифр и префикс 04", "Счёт: 20 цифр", "Отрицательное сальдо", "Дубли ИНН"];
+
+  var RULES = [
+    { id: "R-114", title: "Проценты при досрочном закрытии", dom: "Кредиты", state: "draft", sql: "select credit_id, sum(amount) as interest from cft.interest where close_type = 'EARLY' group by credit_id", cases: ["нулевая сумма", "частичное досрочное", "закрытие в выходной"] },
+    { id: "R-121", title: "Депозит: пролонгация", dom: "Депозиты", state: "approved", sql: "select deposit_id, sum(amount) as balance from cft.deposit where state = 'ACTIVE' group by deposit_id", cases: ["нулевой остаток", "пролонгация", "последний день месяца"] },
+    { id: "R-133", title: "Платёж в проводках", dom: "РКО", state: "approved", sql: "select doc_id, sum(amount) as total from cft.payment where status = 'ACCEPTED' group by doc_id", cases: ["отклонённый документ", "частичное исполнение", "возврат"] },
+    { id: "R-140", title: "Сальдо по счёту", dom: "Счета", state: "review", sql: "select account, round(sum(dt_amount) - sum(kt_amount), 2) as balance from cft.posting group by account", cases: ["красное сальдо", "закрытый период", "счёт без проводок"] },
+    { id: "R-152", title: "Дубли клиентов", dom: "Клиенты", state: "approved", sql: "select client_id, count(*) as accounts from cft.account group by client_id having count(*) > 1", cases: ["совпадение ИНН", "омонимы", "клиент без счетов"] }
+  ];
+
+  var SERVICES = [
+    { name: "gateway", rps: 128, p95: 41, status: "ok", version: "2.4.11", note: "auth · rate limit · audit" },
+    { name: "s2t-svc", rps: 27, p95: 62, status: "ok", version: "2.4.3", note: "карта полей и подтверждение" },
+    { name: "dq-svc", rps: 14, p95: 118, status: "ok", version: "2.4.7", note: "профиль домена до загрузки" },
+    { name: "recon-svc", rps: 9, p95: 210, status: "warn", version: "2.3.9", note: "сальдо legacy vs ЦФТ" },
+    { name: "rule-svc", rps: 6, p95: 87, status: "ok", version: "2.4.1", note: "правило → SQL-черновик" },
+    { name: "posting-svc", rps: 88, p95: 35, status: "ok", version: "2.4.5", note: "двойная запись и хронология" },
+    { name: "cutover-svc", rps: 3, p95: 24, status: "ok", version: "2.2.4", note: "полнота процесса" },
+    { name: "assist-svc", rps: 11, p95: 640, status: "ok", version: "1.9.2", note: "вопросы по регламентам" },
+    { name: "tower-svc", rps: 4, p95: 55, status: "ok", version: "2.4.0", note: "готовность и прогноз" }
+  ];
+
+  var API = [
+    ["GET", "/api/v1/s2t/fields?wave=5", "s2t-svc", "карта полей волны"],
+    ["POST", "/api/v1/s2t/confirm", "s2t-svc", "подтверждение пары поле → поле"],
+    ["GET", "/api/v1/dq/scan/{table}", "dq-svc", "профиль домена до загрузки"],
+    ["GET", "/api/v1/recon/{wave}", "recon-svc", "сальдо legacy vs ЦФТ"],
+    ["POST", "/api/v1/rules/compile", "rule-svc", "правило → SQL-черновик"],
+    ["GET", "/api/v1/postings/balance", "posting-svc", "двойная запись и хронология"],
+    ["GET", "/api/v1/cutover/{run}", "cutover-svc", "полнота процесса"],
+    ["POST", "/api/v1/assist/ask", "assist-svc", "вопрос по регламентам"],
+    ["GET", "/api/v1/tower/readiness", "tower-svc", "готовность и прогноз"]
+  ];
+
+  var CONTROLS = [
+    { key: "owner", label: "Владелец шага", on: true },
+    { key: "rollback", label: "Точка отката", on: false },
+    { key: "window", label: "Окно простоя", on: true },
+    { key: "checkpoint", label: "Критерий готовности", on: false }
+  ];
+
+  var STEPS = [
+    ["ST-01", "Остановка приёма платежей", "операционный блок", "приказ"],
+    ["ST-02", "Финальная выгрузка остатков", "DBA", "дамп"],
+    ["ST-03", "Загрузка в ЦФТ-Банк", "", "лог загрузки"],
+    ["ST-04", "Сверка остатков", "аналитик", "отчёт"],
+    ["ST-05", "Включение операций", "операционный блок", ""],
+    ["ST-06", "План отката", "архитектор", "регламент"]
+  ];
+
+  var DOCS = [
+    { id: "rko-1", dom: "РКО", text: "Закрытие счёта при блокировке по решению налогового органа" },
+    { id: "rko-2", dom: "РКО", text: "Открытие расчётного счёта: комплект документов и сроки" },
+    { id: "credit-1", dom: "Кредиты", text: "Досрочное погашение кредита: пересчёт процентов и проводки" },
+    { id: "credit-2", dom: "Кредиты", text: "Начисление резерва по кредиту и перенос на 47427" },
+    { id: "deposit-1", dom: "Депозиты", text: "Депозит: пролонгация договора и начисление процентов" }
+  ];
+
+  var DOMAINS = [
+    { name: "РКО", weight: 0.3, progress: 0.94, defects: 4, gaps: 2, dq: 60 },
+    { name: "Кредиты", weight: 0.25, progress: 0.78, defects: 11, gaps: 6, dq: 240 },
+    { name: "Депозиты", weight: 0.15, progress: 0.86, defects: 5, gaps: 3, dq: 95 },
+    { name: "Счета", weight: 0.2, progress: 0.91, defects: 6, gaps: 1, dq: 40 },
+    { name: "Проводки", weight: 0.1, progress: 0.62, defects: 18, gaps: 9, dq: 410 }
+  ];
+
+  var WAVES = [
+    { n: 1, date: "12.09", state: "closed", progress: 100 },
+    { n: 2, date: "10.10", state: "closed", progress: 100 },
+    { n: 3, date: "24.10", state: "closed", progress: 100 },
+    { n: 4, date: "01.11", state: "closed", progress: 100 },
+    { n: 5, date: "08.11", state: "active", progress: 12 },
+    { n: 6, date: "22.11", state: "planned", progress: 0 }
+  ];
+
+  var state = {
+    screen: "map", wave: 5, q: "", filter: "Все", dqRan: false, autoDone: {},
+    chat: [], controls: CONTROLS.map(function (c) { return { key: c.key, label: c.label, on: c.on }; }),
+    job: { running: false, percent: 0, phase: "" }, selected: null, log: [],
+    mode: "demo", latency: 0, liveIssues: null, version: "",
+    token: "", user: null, perms: [], audit: null
+  };
+
+  var PERM_OF = {
+    accept: "mapping.confirm", "confirm-auto": "mapping.confirm", "dq-scan": "dq.scan",
+    "rule-compile": "rules.compile", "rule-review": "rules.compile", "chat-send": "assist.ask",
+    ask: "assist.ask", control: "cutover.control", schedule: "cutover.schedule", "run-wave": "wave.start"
+  };
+
+  function can(permission) {
+    return state.mode !== "live" || state.perms.indexOf(permission) !== -1;
+  }
+
+  var PAGE_SIZE = 6;
+  var COLUMNS = {
+    map: ["src", "type", "dom", "tgt", "score", "status"],
+    dq: ["id", "inn", "bik", "account", "balance", "rules"],
+    recon: ["account", "cur", "legacy", "cft", "delta", "cause"],
+    post: ["account", "date", "dt", "kt", "delta", "status"],
+    rules: ["id", "title", "dom", "state"],
+    cutover: ["id", "name", "role", "output"],
+    tower: ["name", "weight", "progress", "defects", "gaps", "dq", "risk", "status"],
+    svc: ["name", "version", "rps", "p95", "status"],
+    audit: ["ts", "user", "action", "payload"]
+  };
+  var SORT = {};
+  var PAGE = {};
+
+  function tableOf() {
+    return document.querySelector("#pane table.grid");
+  }
+
+  function cellValue(row, index) {
+    var cell = row.children[index];
+    return cell ? cell.textContent.trim() : "";
+  }
+
+  function toNumber(text) {
+    var value = parseFloat(text.replace(/\s/g, "").replace(",", "."));
+    return isNaN(value) ? null : value;
+  }
+
+  function compareRows(left, right, index, dir) {
+    var a = cellValue(left, index), b = cellValue(right, index);
+    var na = toNumber(a), nb = toNumber(b);
+    return dir * (na !== null && nb !== null ? na - nb : a.localeCompare(b, "ru"));
+  }
+
+  function applySort(table, screen, cols) {
+    var cfg = SORT[screen];
+    var body = table.tBodies[0];
+    var index = cfg ? cols.indexOf(cfg.key) : -1;
+    if (!body || index === -1) { return; }
+    var rows = Array.prototype.slice.call(body.rows);
+    rows.sort(function (a, b) { return compareRows(a, b, index, cfg.dir); });
+    rows.forEach(function (row) { body.appendChild(row); });
+  }
+
+  function applyPaging(table, screen) {
+    var body = table.tBodies[0];
+    if (!body) { return; }
+    var total = body.rows.length;
+    var pages = Math.max(Math.ceil(total / PAGE_SIZE), 1);
+    var current = Math.min(PAGE[screen] || 0, pages - 1);
+    PAGE[screen] = current;
+    Array.prototype.forEach.call(body.rows, function (row, index) {
+      row.hidden = index < current * PAGE_SIZE || index >= (current + 1) * PAGE_SIZE;
+    });
+    var host = table.parentElement.parentElement;
+    var pager = host.querySelector(".pager");
+    if (!pager) {
+      pager = document.createElement("div");
+      pager.className = "pager";
+      host.appendChild(pager);
+    }
+    pager.innerHTML = "<button class='btn small quiet' data-page='" + screen + "' data-dir='-1'" +
+      (current === 0 ? " disabled" : "") + ">‹ назад</button><span>стр. " + (current + 1) + " из " + pages +
+      " · строк " + total + "</span><button class='btn small quiet' data-page='" + screen + "' data-dir='1'" +
+      (current >= pages - 1 ? " disabled" : "") + ">вперёд ›</button>";
+  }
+
+  function enhanceTables() {
+    var table = tableOf();
+    var cols = COLUMNS[state.screen];
+    if (!table || !cols) { return; }
+    Array.prototype.forEach.call(table.querySelectorAll("thead th"), function (th, index) {
+      var key = cols[index];
+      if (!key || !th.textContent.trim()) { return; }
+      th.classList.add("sortable");
+      var cfg = SORT[state.screen];
+      if (cfg && cfg.key === key) { th.classList.add(cfg.dir > 0 ? "asc" : "desc"); }
+      th.addEventListener("click", function () { setSort(state.screen, key); });
+    });
+    applySort(table, state.screen, cols);
+    applyPaging(table, state.screen);
+  }
+
+  function setSort(screen, key) {
+    var current = SORT[screen];
+    SORT[screen] = { key: key, dir: current && current.key === key ? -current.dir : 1 };
+    PAGE[screen] = 0;
+    render();
+  }
+
+  function csvExport() {
+    var table = tableOf();
+    if (!table) { toast("На этом экране нет таблицы для выгрузки", "warn"); return; }
+    var headers = Array.prototype.map.call(table.querySelectorAll("thead th"), function (th) {
+      return th.textContent.replace(/[↑↓↕]/g, "").trim();
+    });
+    var lines = [headers.join(";")].concat(Array.prototype.map.call(table.tBodies[0].rows, function (row) {
+      return Array.prototype.map.call(row.cells, function (cell) {
+        return '"' + cell.textContent.trim().replace(/"/g, '""') + '"';
+      }).join(";");
+    }));
+    var blob = new Blob(["\ufeff" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
+    var link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "abs-migration-" + state.screen + "-wave" + state.wave + ".csv";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    toast("CSV выгружен: " + (lines.length - 1) + " строк");
+  }
+
+  var API_BASE = "http://127.0.0.1:8000/api/v1";
+  var telemetryTimer = null;
+  var waveSource = null;
+
+  function startTelemetry() {
+    stopTelemetry();
+    if (state.mode !== "live") { return; }
+    telemetryTimer = setInterval(function () {
+      apiCall("/services/telemetry").then(function (payload) {
+        applyServices(payload);
+        renderSide();
+      }).catch(function () { stopTelemetry(); });
+    }, 6000);
+  }
+
+  function stopTelemetry() {
+    if (telemetryTimer) { clearInterval(telemetryTimer); telemetryTimer = null; }
+    if (waveSource) { waveSource.close(); waveSource = null; }
+  }
+
+  function apiCall(path, options) {
+    var init = options || {};
+    var controller = typeof AbortController !== "undefined" ? new AbortController() : null;
+    var timer = setTimeout(function () { if (controller) { controller.abort(); } }, 2500);
+    var headers = { "Content-Type": "application/json" };
+    if (state.token) { headers.Authorization = "Bearer " + state.token; }
+    return fetch(API_BASE + path, {
+      method: init.method || "GET",
+      headers: headers,
+      body: init.body ? JSON.stringify(init.body) : undefined,
+      signal: controller ? controller.signal : undefined
+    }).then(function (response) {
+      clearTimeout(timer);
+      if (!response.ok) { throw new Error("HTTP " + response.status); }
+      return response.json();
+    });
+  }
+
+  function applyMapping(payload) {
+    MAPPING = payload.items.map(function (item) {
+      return { src: item.src, type: item.type, dom: item.dom, tgt: item.tgt, score: item.score,
+        auto: item.status === "auto", api: "POST /api/v1/s2t/confirm" };
+    });
+  }
+
+  function applyRecon(payload) {
+    RECON = payload.items.map(function (item) {
+      return { account: item.account, cur: item.currency, legacy: item.legacy, cft: item.cft, cause: item.cause };
+    });
+  }
+
+  function applyPostings(payload) {
+    POSTINGS = payload.items.map(function (item) {
+      return { account: item.account, date: item.date, dt: item.dt, kt: item.kt };
+    });
+  }
+
+  function applyRules(payload) {
+    RULES = payload.items.map(function (item) {
+      return { id: item.id, title: item.title, dom: item.domain, state: item.state, sql: item.sql, cases: item.cases };
+    });
+  }
+
+  function applyDomains(payload) {
+    DOMAINS = payload.domains.map(function (item) {
+      return { name: item.name, weight: item.weight, progress: item.progress, defects: item.defects, gaps: item.gaps, dq: item.dq };
+    });
+  }
+
+  function applyServices(payload) {
+    SERVICES = payload.items.map(function (item) {
+      return { name: item.name, rps: item.rps, p95: item.p95, status: item.status, version: item.version, note: item.note };
+    });
+  }
+
+  function applyWaves(payload) {
+    WAVES = payload.items.map(function (item) {
+      return { n: item.n, date: item.date, state: item.state, progress: item.progress };
+    });
+  }
+
+  function applyDocs(payload) {
+    DOCS = payload.items.map(function (item) {
+      return { id: item.id, dom: item.domain, text: item.text };
+    });
+  }
+
+  function bootstrap() {
+    var started = Date.now();
+    return apiCall("/health").then(function (health) {
+      state.mode = "live";
+      state.version = health.version;
+      state.latency = Date.now() - started;
+      if (!state.token) { showLogin(); return null; }
+      return loadAll();
+    }).catch(function (error) {
+      state.mode = "demo";
+      hideGate();
+      logLine("info", "gateway", "API недоступен (" + (error && error.name ? error.name : "offline") + ") — демо-режим");
+      render();
+    });
+  }
+
+  function loadAll() {
+    return Promise.all([
+      apiCall("/s2t/fields?wave=" + state.wave).then(applyMapping),
+      apiCall("/recon/" + state.wave).then(applyRecon),
+      apiCall("/postings/balance").then(applyPostings),
+      apiCall("/rules").then(applyRules),
+      apiCall("/tower/readiness").then(applyDomains),
+      apiCall("/services").then(applyServices),
+      apiCall("/waves").then(applyWaves),
+      apiCall("/docs").then(applyDocs)
+    ]).then(function () {
+      hideGate();
+      startTelemetry();
+      logLine("ok", "gateway", "live-режим: API " + API_BASE + " · " + state.latency + " ms");
+      render();
+      return null;
+    });
+  }
+
+  function showLogin() {
+    var gate = document.getElementById("gate");
+    var note = document.getElementById("gate-note");
+    if (note) { note.textContent = "analyst / analyst123 · architect / architect123 · auditor / auditor123"; }
+    if (gate) { gate.classList.remove("hidden"); }
+    var field = document.getElementById("login-user");
+    if (field) { field.focus(); }
+  }
+
+  function hideGate() {
+    var gate = document.getElementById("gate");
+    if (gate) { gate.classList.add("hidden"); }
+  }
+
+  function doLogin() {
+    var user = document.getElementById("login-user").value.trim();
+    var password = document.getElementById("login-pass").value;
+    apiCall("/auth/login", { method: "POST", body: { user: user, password: password } }).then(function (session) {
+      state.token = session.token;
+      state.user = { name: session.name, login: session.user, role: session.role, role_title: session.role_title };
+      state.perms = session.perms;
+      hideGate();
+      renderUser();
+      loadAll();
+      toast("Вход выполнен: " + session.name + " · " + session.role_title);
+      logLine("ok", "gateway", "вход " + session.user + " (" + session.role + ")");
+    }).catch(function () {
+      var note = document.getElementById("gate-note");
+      if (note) { note.textContent = "Неверный логин или пароль"; }
+    });
+  }
+
+  function doLogout() {
+    if (state.mode === "live" && state.token) {
+      apiCall("/auth/logout", { method: "POST", body: {} }).catch(function () { return null; });
+    }
+    stopTelemetry();
+    state.token = "";
+    state.user = null;
+    state.perms = [];
+    renderUser();
+    showLogin();
+  }
+
+  function esc(value) {
+    return String(value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+
+  function money(value) {
+    return new Intl.NumberFormat("ru-RU", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value);
+  }
+
+  function control(digits, weights) {
+    var sum = 0;
+    weights.forEach(function (w, i) { sum += digits[i] * w; });
+    return (sum % 11) % 10;
+  }
+
+  function innValid(value) {
+    return /^\d{10}$/.test(value) && control(value.split("").map(Number), [2, 4, 10, 3, 5, 9, 4, 6, 8]) === Number(value[9]);
+  }
+
+  function kpi(label, value) {
+    return '<div class="kpi"><b>' + esc(value) + "</b><span>" + esc(label) + "</span></div>";
+  }
+
+  function badge(level, text) {
+    return '<span class="badge ' + level + '">' + esc(text) + "</span>";
+  }
+
+  function head(title, text, actions) {
+    return '<div class="pane-head"><div><h1>' + esc(title) + "</h1><p class='sub'>" + text + "</p></div>" +
+      "<div class='actions'>" + (actions || '<span class="pill-wave">волна ' + state.wave + " · prod-контур</span>") + "</div></div>";
+  }
+
+  function matches(text) {
+    return !state.q || String(text).toLowerCase().indexOf(state.q.toLowerCase()) !== -1;
+  }
+
+  function delta(row) {
+    return Math.round((row.cft - row.legacy) * 100) / 100;
+  }
+
+  function postDelta(row) {
+    return Math.round((row.dt - row.kt) * 100) / 100;
+  }
+
+  function issues() {
+    return CLIENTS.map(function (c) {
+      var rules = [];
+      if (!innValid(c.inn)) { rules.push("ИНН"); }
+      if (!/^04\d{7}$/.test(c.bik)) { rules.push("БИК"); }
+      if (!/^\d{20}$/.test(c.acc)) { rules.push("счёт"); }
+      if (c.bal < 0) { rules.push("сальдо"); }
+      return { id: c.id, inn: c.inn, bik: c.bik, account: c.acc, balance: c.bal, rules: rules };
+    }).filter(function (item) { return item.rules.length > 0; });
+  }
+
+  function screenMap() {
+    var rows = MAPPING.filter(function (r) { return matches(r.src + r.tgt + r.dom); });
+    var confirmed = MAPPING.filter(function (r) { return r.auto || state.autoDone[r.src]; }).length;
+    var body = rows.map(function (r) {
+      var status = state.autoDone[r.src] ? "ok" : r.auto ? "ok" : r.score >= 60 ? "watch" : "risk";
+      var label = state.autoDone[r.src] ? "подтверждено" : r.auto ? "авто" : r.score >= 60 ? "ревью" : "вручную";
+      return '<tr class="clickable" data-inspect="mapping" data-id="' + esc(r.src) + '">' +
+        '<td class="mono">' + esc(r.src) + "</td><td class='mono'>" + esc(r.type) + "</td><td>" + esc(r.dom) + "</td>" +
+        '<td class="mono name">' + esc(r.tgt) + "</td>" +
+        '<td><div class="meter"><div class="bar"><i style="width:' + r.score + '%"></i></div><span class="num">' + r.score + "%</span></div></td>" +
+        "<td>" + badge(status, label) + "</td>" +
+        '<td class="right"><button class="btn small quiet" data-act="accept" data-id="' + esc(r.src) + '">Подтвердить</button></td></tr>';
+    }).join("");
+
+    var domains = ["Все"].concat(MAPPING.map(function (r) { return r.dom; }).filter(function (v, i, a) { return a.indexOf(v) === i; }));
+    var chips = domains.map(function (d) {
+      var count = d === "Все" ? MAPPING.length : MAPPING.filter(function (r) { return r.dom === d; }).length;
+      return '<button class="chip' + (state.filter === d ? " on" : "") + '" data-act="dom" data-dom="' + esc(d) + '">' + esc(d) + "<i>" + count + "</i></button>";
+    }).join("");
+
+    return head("Карта данных", "Поле источника, тип, домен и кандидат в модели ЦФТ-Банка. Сервис <b>s2t-svc</b> отдаёт карту по волне и принимает подтверждение аналитика.",
+      '<button class="btn ghost" data-act="confirm-auto">Подтвердить авто</button><button class="btn" data-act="export">Экспорт карты</button>') +
+      '<div class="kpis">' + kpi("полей", MAPPING.length) + kpi("авто-мэтч", MAPPING.filter(function (r) { return r.auto; }).length) +
+      kpi("на ревью", MAPPING.filter(function (r) { return !r.auto; }).length) + kpi("подтверждено", confirmed + " / " + MAPPING.length) + "</div>" +
+      '<div class="panel"><div class="panel-head"><h2>Source-to-Target Mapping</h2><div class="tools">' + chips + "</div></div>" +
+      '<div class="panel-body flush" style="overflow-x:auto"><table class="grid"><thead><tr><th>Поле источника</th><th>Тип</th><th>Домен</th><th>Кандидат ЦФТ</th><th>Уверенность</th><th>Статус</th><th></th></tr></thead><tbody>' +
+      (body || '<tr><td colspan="7"><div class="empty">Ничего не найдено по запросу.</div></td></tr>') + "</tbody></table></div></div>";
+  }
+
+  function screenDQ() {
+    var found = state.dqRan ? (state.liveIssues || issues()) : [];
+    var rows = found.filter(function (c) { return matches(c.id + c.inn); }).map(function (c) {
+      return '<tr class="clickable" data-inspect="client" data-id="' + esc(c.id) + '"><td class="name">' + esc(c.id) + "</td>" +
+        '<td class="mono">' + esc(c.inn) + "</td><td class='mono'>" + esc(c.bik) + "</td><td class='mono'>" + esc(c.account) + "</td>" +
+        '<td class="mono right">' + money(c.balance) + "</td><td>" + badge("risk", c.rules.join(" · ")) + "</td></tr>";
+    }).join("");
+
+    var rules = DQ_RULES.map(function (rule, i) {
+      var hit = state.dqRan ? (i === 0 ? issues().length : i === 1 ? 2 : i === 2 ? 1 : 2) : 0;
+      return '<div style="display:flex;gap:10px;align-items:center;padding:9px 0;border-bottom:1px dashed var(--line-soft)">' +
+        '<span class="mono" style="color:var(--muted)">' + (i + 1) + "</span><span style='flex:1'>" + esc(rule) + "</span>" +
+        badge(hit ? "risk" : "ok", hit ? hit + " находок" : "чисто") + "</div>";
+    }).join("");
+
+    return head("Качество данных", "Профиль legacy до загрузки: контрольное число ИНН, БИК, 20-значный счёт, красное сальдо, дубли. Сервис <b>dq-svc</b>.",
+      '<button class="btn" data-act="dq-scan">Проверить домен</button>') +
+      '<div class="kpis">' + kpi("строк", state.dqRan ? CLIENTS.length : 0) + kpi("нарушений", found.length) +
+      kpi("критичных", found.length) + kpi("правил", DQ_RULES.length) + "</div>" +
+      '<div class="cols" style="display:grid;grid-template-columns:1fr 320px;gap:14px">' +
+      '<div class="panel"><div class="panel-head"><h2>Нарушения по домену «Клиенты»</h2><span class="hint">GET /dq/scan</span></div><div class="panel-body flush" style="overflow-x:auto">' +
+      (rows ? '<table class="grid"><thead><tr><th>Клиент</th><th>ИНН</th><th>БИК</th><th>Счёт</th><th class="right">Остаток</th><th>Нарушения</th></tr></thead><tbody>' + rows + "</tbody></table>"
+        : '<div class="panel-body"><div class="empty">' + (state.dqRan ? "Нарушений нет." : "Профилирование не запущено.") + "</div></div>") +
+      "</div></div>" +
+      '<div class="panel"><div class="panel-head"><h2>Правила профиля</h2></div><div class="panel-body">' + rules + "</div></div></div>";
+  }
+
+  function screenRecon() {
+    var causes = ["Все", "rounding", "rate", "missing_posting", "manual"];
+    var rows = RECON.filter(function (r) { return (state.filter === "Все" || r.cause === state.filter) && matches(r.account); });
+    var total = RECON.reduce(function (s, r) { return s + Math.abs(delta(r)); }, 0);
+    var chips = causes.map(function (c) {
+      var count = c === "Все" ? RECON.length : RECON.filter(function (r) { return r.cause === c; }).length;
+      return '<button class="chip' + (state.filter === c ? " on" : "") + '" data-act="filter" data-cause="' + esc(c) + '">' + esc(c === "Все" ? "Все" : CAUSE[c]) + "<i>" + count + "</i></button>";
+    }).join("");
+
+    var body = rows.map(function (r) {
+      var d = delta(r);
+      var level = Math.abs(d) < 0.01 ? "ok" : r.cause === "rounding" ? "watch" : "risk";
+      return '<tr class="clickable" data-inspect="recon" data-id="' + esc(r.account + "|" + r.cur) + '"><td class="mono">' + esc(r.account) + "</td><td>" + esc(r.cur) + "</td>" +
+        '<td class="mono right">' + money(r.legacy) + '</td><td class="mono right">' + money(r.cft) + '</td><td class="mono right name">' + money(d) + "</td>" +
+        "<td>" + badge(level, CAUSE[r.cause]) + "</td></tr>";
+    }).join("");
+
+    return head("Сверка остатков", "Сальдо legacy против ЦФТ-Банка по ключу «счёт + валюта». Каждая разница получает причину, отчёт уходит в согласование с банком. Сервис <b>recon-svc</b>.",
+      '<button class="btn ghost" data-act="export">Выгрузить отчёт</button>') +
+      '<div class="kpis">' + kpi("счетов", RECON.length) + kpi("сумма расхождений", money(total) + " ₽") + kpi("объяснено", "100%") + kpi("волна", "5 из 5") + "</div>" +
+      '<div class="panel"><div class="panel-head"><h2>Расхождения</h2><div class="tools">' + chips + "</div></div>" +
+      '<div class="panel-body flush" style="overflow-x:auto"><table class="grid"><thead><tr><th>Счёт</th><th>Валюта</th><th class="right">Legacy</th><th class="right">ЦФТ</th><th class="right">Разница</th><th>Причина</th></tr></thead>' +
+      "<tbody>" + (body || '<tr><td colspan="6"><div class="empty">Ничего не найдено.</div></td></tr>') + "</tbody>" +
+      "<tfoot><tr><td colspan='4'>Итого к разбору</td><td class='mono right'>" + money(total) + "</td><td></td></tr></tfoot></table></div></div>";
+  }
+
+  function screenRules() {
+    var rows = RULES.filter(function (r) { return matches(r.title + r.dom); }).map(function (r) {
+      var level = r.state === "approved" ? "ok" : r.state === "review" ? "watch" : "risk";
+      var label = r.state === "approved" ? "согласовано" : r.state === "review" ? "на ревью" : "черновик";
+      return '<tr class="clickable" data-inspect="rule" data-id="' + esc(r.id) + '"><td class="mono">' + esc(r.id) + "</td><td class='name'>" + esc(r.title) +
+        "</td><td>" + esc(r.dom) + "</td><td>" + badge(level, label) + "</td>" +
+        '<td class="right"><button class="btn small quiet" data-act="open-rule" data-id="' + esc(r.id) + '">Открыть</button></td></tr>';
+    }).join("");
+
+    var current = state.selected && RULES.filter(function (r) { return r.id === state.selected; })[0];
+    var editor = current || RULES[0];
+
+    return head("Правила → SQL", "Реестр правил трансформации и редактор: текст банка → SQL-черновик → граничные случаи → согласование. Сервис <b>rule-svc</b>.",
+      '<button class="btn ghost" data-act="rule-review">Отправить на ревью</button>') +
+      '<div class="kpis">' + kpi("правил", RULES.length) + kpi("согласовано", RULES.filter(function (r) { return r.state === "approved"; }).length) +
+      kpi("на ревью", RULES.filter(function (r) { return r.state === "review"; }).length) + kpi("сэкономлено", "120 ч") + "</div>" +
+      '<div class="panel"><div class="panel-head"><h2>Реестр правил</h2><span class="hint">GET /rules · mig.rule</span></div>' +
+      '<div class="panel-body flush" style="overflow-x:auto"><table class="grid"><thead><tr><th>Код</th><th>Правило</th><th>Домен</th><th>Статус</th><th></th></tr></thead><tbody>' +
+      (rows || '<tr><td colspan="5"><div class="empty">Ничего не найдено.</div></td></tr>') + "</tbody></table></div></div>" +
+      '<div class="panel"><div class="panel-head"><h2>' + esc(editor.title) + '</h2><span class="hint">POST /rules/compile</span></div><div class="panel-body">' +
+      '<div style="display:flex;flex-direction:column;gap:10px">' +
+      '<textarea id="rule-text" style="width:100%;min-height:72px;border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:13.5px;resize:vertical">' +
+      esc(editor.title + ". Домен: " + editor.dom) + "</textarea>" +
+      '<div class="toolbar-inline"><button class="btn" data-act="rule-compile" data-id="' + esc(editor.id) + '">Собрать SQL</button>' +
+      '<button class="btn quiet" data-act="copy" data-copy="' + esc(editor.sql) + '">Копировать SQL</button></div>' +
+      '<pre id="rule-out" style="margin:0;background:#f7f8fc;border:1px solid var(--line-soft);border-radius:8px;padding:12px;font-size:12.5px;color:#33383d;overflow:auto;max-height:220px">' +
+      esc(editor.sql) + "</pre>" +
+      '<div class="toolbar-inline">' + editor.cases.map(function (c) { return '<span class="chip">' + esc(c) + "</span>"; }).join("") + "</div>" +
+      "</div></div></div>";
+  }
+
+  function screenPost() {
+    var rows = POSTINGS.filter(function (r) { return matches(r.account); }).map(function (r) {
+      var d = postDelta(r);
+      var ok = d === 0;
+      return '<tr class="clickable" data-inspect="posting" data-id="' + esc(r.account) + '"><td class="mono">' + esc(r.account) + "</td>" +
+        '<td class="mono">' + esc(r.date) + '</td><td class="mono right">' + money(r.dt) + '</td><td class="mono right">' + money(r.kt) +
+        '</td><td class="mono right name">' + money(d) + "</td><td>" + badge(ok ? "ok" : "risk", ok ? "сбалансировано" : "разбаланс") + "</td></tr>";
+    }).join("");
+    var bad = POSTINGS.filter(function (r) { return postDelta(r) !== 0; });
+
+    return head("Проводки", "Контроль двойной записи и хронологии: Дт и Кт по счёту, обратные проводки, документы задним числом. Сервис <b>posting-svc</b>.",
+      '<button class="btn quiet" data-act="open-log">Журнал проверки</button>') +
+      '<div class="kpis">' + kpi("счетов", POSTINGS.length) + kpi("разбалансов", bad.length) +
+      kpi("сумма", money(bad.reduce(function (s, r) { return s + Math.abs(postDelta(r)); }, 0)) + " ₽") + kpi("проверка", "< 15 мин") + "</div>" +
+      '<div class="panel"><div class="panel-head"><h2>Двойная запись</h2><span class="hint">cft.posting · wave 5</span></div>' +
+      '<div class="panel-body flush" style="overflow-x:auto"><table class="grid"><thead><tr><th>Счёт</th><th>Дата</th><th class="right">Дт</th><th class="right">Кт</th><th class="right">Дельта</th><th>Статус</th></tr></thead><tbody>' +
+      (rows || '<tr><td colspan="6"><div class="empty">Ничего не найдено.</div></td></tr>') + "</tbody></table></div></div>" +
+      '<div class="panel"><div class="panel-head"><h2>Хронология</h2><span class="hint">документы задним числом</span></div><div class="panel-body">' +
+      '<div style="display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px dashed var(--line-soft)">' +
+      badge("risk", "риск") + '<span class="mono">PL-884213</span><span>счёт 40817810000000000001 · 2026-11-05 — проводка задним числом</span></div>' +
+      '<div style="display:flex;gap:10px;align-items:flex-start;padding:8px 0">' +
+      badge("risk", "риск") + '<span class="mono">PL-884401</span><span>счёт 47427810000000000022 · 2026-10-29 — закрытый период</span></div>' +
+      "</div></div>";
+  }
+
+  function screenCutover() {
+    var closed = state.controls.filter(function (c) { return c.on; }).length;
+    var critical = totalCritical();
+    var toggles = state.controls.map(function (c) {
+      return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px dashed var(--line-soft)">' +
+        '<button data-act="control" data-key="' + c.key + '" style="width:40px;height:22px;border-radius:999px;background:' + (c.on ? "var(--red)" : "#e3e6ee") +
+        ';position:relative;flex:0 0 40px" aria-label="' + esc(c.label) + '" aria-pressed="' + c.on + '"><span style="position:absolute;top:3px;left:' + (c.on ? "21px" : "3px") +
+        'px;width:16px;height:16px;border-radius:50%;background:#fff;display:block"></span></button>' +
+        '<span style="font-size:13.5px">' + esc(c.label) + '</span><span style="margin-left:auto">' + badge(c.on ? "ok" : "risk", c.on ? "закрыт" : "не закрыт") + "</span></div>";
+    }).join("");
+    var steps = STEPS.map(function (s) {
+      return '<tr class="clickable" data-inspect="step" data-id="' + esc(s[0]) + '"><td class="mono">' + esc(s[0]) + '</td><td class="name">' + esc(s[1]) + "</td><td>" +
+        (s[2] ? esc(s[2]) : badge("risk", "нет роли")) + "</td><td>" + (s[3] ? esc(s[3]) : badge("risk", "нет выхода")) + "</td></tr>";
+    }).join("");
+    var banner = critical
+      ? '<div class="panel" style="border-color:#f2c3c9;background:var(--red-pale)"><div class="panel-body"><b style="color:var(--red)">Переключение заблокировано:</b> не закрыты критичные контроли — откат и критерий готовности.</div></div>'
+      : '<div class="panel" style="border-color:#c9e6d6;background:var(--green-pale)"><div class="panel-body"><b style="color:var(--green)">Процесс готов:</b> контроли закрыты, дату cut-over можно назначать.</div></div>';
+
+    return head("Cut-over", "Полнота процесса переключения на ЦФТ-Банк: владелец шага, точка отката, окно простоя, критерий готовности. Сервис <b>cutover-svc</b>.",
+      '<button class="btn" data-act="schedule" ' + (critical ? "disabled" : "") + ">Назначить дату</button>") +
+      '<div class="kpis">' + kpi("шагов", STEPS.length) + kpi("покрытие", Math.round(closed / state.controls.length * 100) + "%") +
+      kpi("пропусков", 2) + kpi("блокеров", critical ? 2 : 0) + "</div>" + banner +
+      '<div style="display:grid;grid-template-columns:340px 1fr;gap:14px">' +
+      '<div class="panel"><div class="panel-head"><h2>Контроли</h2><span class="hint">нажмите переключатель</span></div><div class="panel-body">' + toggles + "</div></div>" +
+      '<div class="panel"><div class="panel-head"><h2>Шаги</h2><span class="hint">BPMN · run cutover-wave-5</span></div>' +
+      '<div class="panel-body flush" style="overflow-x:auto"><table class="grid"><thead><tr><th>Шаг</th><th>Название</th><th>Роль</th><th>Выход</th></tr></thead><tbody>' + steps + "</tbody></table></div></div></div>";
+  }
+
+  function totalCritical() {
+    return state.controls.filter(function (c) { return !c.on && (c.key === "rollback" || c.key === "checkpoint"); }).length;
+  }
+
+  function stems(text) {
+    return text.toLowerCase().replace(/[.,;:!?()«»"'—–\-\/]/g, " ").split(/\s+/).filter(function (w) { return w.length > 3; }).map(function (w) { return w.slice(0, 4); });
+  }
+
+  function retrieve(question, domain) {
+    return DOCS.filter(function (doc) { return !domain || domain === "Все" || doc.dom === domain; }).map(function (doc) {
+      var q = stems(question), d = stems(doc.text);
+      return { doc: doc, score: q.filter(function (s) { return d.indexOf(s) !== -1; }).length };
+    }).filter(function (item) { return item.score > 0; }).sort(function (a, b) { return b.score - a.score; }).slice(0, 1).map(function (item) { return item.doc; });
+  }
+
+  function screenChat() {
+    var thread = state.chat.map(function (m) {
+      if (m.q) { return '<div class="msg q">' + esc(m.q) + "</div>"; }
+      if (m.typing) { return '<div class="msg typing">assist-svc ищет по регламентам…</div>'; }
+      return '<div class="msg a">' + esc(m.a) + (m.source ? '<div class="toolbar-inline" style="margin-top:8px"><span class="chip">' + esc(m.source) + "</span></div>" : "") + "</div>";
+    }).join("");
+    var domains = ["Все", "РКО", "Кредиты", "Депозиты"];
+    var chips = domains.map(function (d) {
+      return '<button class="chip' + (state.filter === d ? " on" : "") + '" data-act="dom" data-dom="' + esc(d) + '">' + esc(d) + "</button>";
+    }).join("");
+    var quick = ["Как закрыть счёт при блокировке?", "Пролонгация депозита", "Что такое криптобиржа?"].map(function (q) {
+      return '<button class="chip" data-act="ask" data-q="' + esc(q) + '">' + esc(q) + "</button>";
+    }).join("");
+
+    return head("Ассистент", "Ответ только по найденным регламентам, всегда со ссылкой на документ; без источника — отказ. Сервис <b>assist-svc</b>.",
+      '<span class="pill-wave">' + DOCS.length + " документа в индексе</span>") +
+      '<div style="display:grid;grid-template-columns:1fr 300px;gap:14px">' +
+      '<div class="panel"><div class="panel-head"><h2>Диалог</h2><div class="tools">' + chips + "</div></div><div class='panel-body'>" +
+      '<div class="chat" id="chat">' + (thread || '<div class="empty">Задайте вопрос по регламентам — ответ придёт со ссылкой на документ.</div>') + "</div>" +
+      '<div class="chatbar"><input id="chat-input" type="text" placeholder="Например: досрочное погашение кредита" aria-label="Вопрос ассистенту"><button class="btn" data-act="chat-send">Спросить</button></div>' +
+      '<div class="toolbar-inline" style="margin-top:10px">' + quick + "</div></div></div>" +
+      '<div class="panel"><div class="panel-head"><h2>Источники</h2></div><div class="panel-body">' +
+      DOCS.map(function (doc) {
+        return '<div style="display:flex;gap:8px;padding:7px 0;border-bottom:1px dashed var(--line-soft);font-size:12.5px">' + badge("gray", doc.dom) +
+          '<span><b class="mono">' + esc(doc.id) + "</b><br>" + esc(doc.text) + "</span></div>";
+      }).join("") + "</div></div></div>";
+  }
+
+  function risk(domain) {
+    return Math.round((0.4 * domain.defects / 100 + 0.35 * domain.gaps / 50 + 0.25 * domain.dq / 1000) * 1000) / 1000;
+  }
+
+  function screenTower() {
+    var total = DOMAINS.reduce(function (s, d) { return s + d.weight * d.progress; }, 0);
+    var rows = DOMAINS.map(function (d) {
+      var score = risk(d);
+      var level = score > 0.6 ? "risk" : score > 0.3 ? "watch" : "ok";
+      return '<tr class="clickable" data-inspect="domain" data-id="' + esc(d.name) + '"><td class="name">' + esc(d.name) + '</td><td class="num">' + d.weight.toFixed(2) + "</td>" +
+        '<td><div class="meter"><div class="bar"><i class="green" style="width:' + Math.round(d.progress * 100) + '%"></i></div><span class="num">' + Math.round(d.progress * 100) + "%</span></div></td>" +
+        '<td class="num">' + d.defects + '</td><td class="num">' + d.gaps + '</td><td class="num">' + d.dq + "</td>" +
+        '<td><div class="meter"><div class="bar"><i class="' + (level === "risk" ? "" : level === "watch" ? "amber" : "green") + '" style="width:' + Math.round(score * 100) + '%"></i></div><span class="num">' + score.toFixed(2) + "</span></div></td>" +
+        "<td>" + badge(level, level === "risk" ? "риск" : level === "watch" ? "наблюдение" : "готово") + "</td></tr>";
+    }).join("");
+
+    var chart = DOMAINS.map(function (d) {
+      return '<div class="chart-row"><span>' + esc(d.name) + '</span><div class="bar"><i class="green" style="width:' + Math.round(d.progress * 100) + '%"></i></div><span class="num">' + Math.round(d.progress * 100) + "%</span></div>";
+    }).join("");
+
+    var waves = WAVES.map(function (w) {
+      var level = w.state === "closed" ? "ok" : w.state === "active" ? "watch" : "gray";
+      var label = w.state === "closed" ? "закрыта" : w.state === "active" ? "идёт" : "план";
+      return '<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px dashed var(--line-soft);font-size:12.5px">' +
+        '<span class="num" style="width:56px">волна ' + w.n + '</span><span class="mono">' + esc(w.date) + '</span>' +
+        '<div class="bar" style="flex:1"><i class="' + (w.state === "closed" ? "green" : "") + '" style="width:' + w.progress + '%"></i></div>' +
+        badge(level, label) + "</div>";
+    }).join("");
+
+    return head("Готовность к волне", "Взвешенный прогресс доменов, риск-скоринг по дефектам, пропускам карты и качеству данных, прогноз даты. Сервис <b>tower-svc</b>.",
+      '<button class="btn ghost" data-act="export">Отчёт для банка</button>') +
+      '<div class="kpis">' + kpi("готовность", Math.round(total * 100) + "%") + kpi("осталось", (100 - Math.round(total * 100)) + "%") +
+      kpi("прогноз", "22 декабря 2026") + kpi("в риске", DOMAINS.filter(function (d) { return risk(d) > 0.6; }).length) + "</div>" +
+      '<div class="panel"><div class="panel-head"><h2>Домены</h2><span class="hint">GET /tower/readiness</span></div>' +
+      '<div class="panel-body flush" style="overflow-x:auto"><table class="grid"><thead><tr><th>Домен</th><th>Вес</th><th>Прогресс</th><th>Дефекты</th><th>S2T</th><th>DQ</th><th>Риск</th><th>Статус</th></tr></thead><tbody>' + rows + "</tbody></table></div></div>" +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">' +
+      '<div class="panel"><div class="panel-head"><h2>Прогресс доменов</h2></div><div class="panel-body"><div class="chart">' + chart + "</div>" +
+      '<div class="legend"><span><i class="swatch green"></i>загружено и сверено</span><span><i class="swatch"></i>в работе</span></div></div></div>' +
+      '<div class="panel"><div class="panel-head"><h2>Волны</h2></div><div class="panel-body">' + waves + "</div></div></div>";
+  }
+
+  function screenSvc() {
+    var nodes = SERVICES.filter(function (s) { return s.name !== "gateway"; });
+    var svcRows = SERVICES.filter(function (s) { return matches(s.name); }).map(function (s) {
+      return '<tr class="clickable" data-inspect="service" data-id="' + esc(s.name) + '"><td class="name mono">' + esc(s.name) + '</td><td class="num">' + esc(s.version) +
+        '</td><td class="num">' + s.rps + ' rps</td><td class="num">' + s.p95 + " ms</td><td>" + badge(s.status === "ok" ? "ok" : "watch", s.status === "ok" ? "online" : "деградация") + "</td></tr>";
+    }).join("");
+    var apiRows = API.map(function (a) {
+      return "<tr><td>" + badge("gray", a[0]) + "</td><td class='code mono'>" + esc(a[1]) + "</td><td class='mono'>" + esc(a[2]) + "</td><td>" + esc(a[3]) +
+        ' <button class="copy" data-act="copy" data-copy="' + esc(a[1]) + '">копировать</button></td></tr>';
+    }).join("");
+
+    var boxes = nodes.map(function (s, i) {
+      var x = 210 + (i % 4) * 175;
+      var y = 150 + Math.floor(i / 4) * 90;
+      return "<g><rect x='" + x + "' y='" + y + "' width='158' height='62' rx='8' fill='#fff' stroke='" + (s.status === "ok" ? "#dfe3eb" : "#e8c07c") + "'/>" +
+        "<text x='" + (x + 14) + "' y='" + (y + 25) + "' font-size='13' font-weight='600' fill='#1f2229' font-family='Segoe UI, Arial'>" + esc(s.name) + "</text>" +
+        "<text x='" + (x + 14) + "' y='" + (y + 44) + "' font-size='11' fill='#8f96a3' font-family='Segoe UI, Arial'>" + s.rps + " rps · p95 " + s.p95 + " ms</text>" +
+        "<circle cx='" + (x + 142) + "' cy='" + (y + 18) + "' r='4' fill='" + (s.status === "ok" ? "#1f8a5b" : "#dfa63c") + "'/></g>";
+    }).join("");
+
+    var svg = "<svg class='topo' viewBox='0 0 960 400' role='img' aria-label='Топология микросервисов'>" +
+      "<rect x='0' y='0' width='960' height='400' fill='#fbfbfe'/>" +
+      "<rect x='16' y='16' width='176' height='112' rx='8' fill='#fff' stroke='#dfe3eb'/>" +
+      "<text x='32' y='42' font-size='13' font-weight='600' fill='#1f2229' font-family='Segoe UI, Arial'>Клиент</text>" +
+      "<text x='32' y='62' font-size='11' fill='#8f96a3' font-family='Segoe UI, Arial'>АРМ аналитика</text>" +
+      "<text x='32' y='82' font-size='11' fill='#8f96a3' font-family='Segoe UI, Arial'>RBAC · SSO банка</text>" +
+      "<text x='32' y='104' font-size='11' fill='#8f96a3' font-family='Segoe UI, Arial'>HTTPS · mTLS</text>" +
+      "<rect x='16' y='152' width='176' height='72' rx='8' fill='#fdeef0' stroke='#f3c2c8'/>" +
+      "<text x='32' y='178' font-size='13' font-weight='600' fill='#b81b2b' font-family='Segoe UI, Arial'>API Gateway</text>" +
+      "<text x='32' y='198' font-size='11' fill='#b81b2b' font-family='Segoe UI, Arial'>auth · rate limit · audit</text>" +
+      "<line x1='104' y1='128' x2='104' y2='152' stroke='#c3c9d6'/>" + boxes +
+      "<line x1='192' y1='188' x2='210' y2='181' stroke='#c3c9d6'/>" +
+      "<rect x='210' y='300' width='250' height='66' rx='8' fill='#fff' stroke='#dfe3eb'/>" +
+      "<text x='226' y='326' font-size='13' font-weight='600' fill='#1f2229' font-family='Segoe UI, Arial'>PostgreSQL 16 · mig</text>" +
+      "<text x='226' y='346' font-size='11' fill='#8f96a3' font-family='Segoe UI, Arial'>mapping · posting · balance · rule</text>" +
+      "<rect x='480' y='300' width='230' height='66' rx='8' fill='#fff' stroke='#dfe3eb'/>" +
+      "<text x='496' y='326' font-size='13' font-weight='600' fill='#1f2229' font-family='Segoe UI, Arial'>Redis / очередь</text>" +
+      "<text x='496' y='346' font-size='11' fill='#8f96a3' font-family='Segoe UI, Arial'>волны загрузки · ретраи</text>" +
+      "<line x1='300' y1='240' x2='300' y2='300' stroke='#c3c9d6'/><line x1='560' y1='240' x2='560' y2='300' stroke='#c3c9d6'/>" +
+      "</svg>";
+
+    return head("Микросервисы", "Платформа за API Gateway: у каждого сервиса свой контракт, версия и телеметрия. Данные — PostgreSQL <b>mig</b>, асинхронные волны — через очередь.") +
+      '<div class="kpis">' + kpi("сервисов", SERVICES.length) + kpi("online", "8 / 9") + kpi("p95 шлюза", "41 ms") + kpi("SLA", "99,9%") + "</div>" +
+      '<div class="panel"><div class="panel-head"><h2>Топология</h2><span class="hint">prod · contour bank-migration</span></div><div class="panel-body flush">' + svg + "</div></div>" +
+      '<div class="panel"><div class="panel-head"><h2>Сервисы</h2><span class="hint">health-check каждые 15 с</span></div>' +
+      '<div class="panel-body flush" style="overflow-x:auto"><table class="grid"><thead><tr><th>Сервис</th><th>Версия</th><th>Нагрузка</th><th>p95</th><th>Статус</th></tr></thead><tbody>' + (svcRows || '<tr><td colspan="5"><div class="empty">Ничего не найдено.</div></td></tr>') + "</tbody></table></div></div>" +
+      '<div class="panel"><div class="panel-head"><h2>API-контракты</h2><span class="hint">OpenAPI 3.1</span></div>' +
+      '<div class="panel-body flush" style="overflow-x:auto"><table class="grid api"><thead><tr><th>Метод</th><th>Путь</th><th>Сервис</th><th>Назначение</th></tr></thead><tbody>' + apiRows + "</tbody></table></div></div>";
+  }
+
+  function screenAudit() {
+    var rows = (state.audit || []).map(function (item) {
+      return '<tr><td class="mono">' + esc(item.ts) + "</td><td>" + esc(item.user || "—") +
+        '</td><td class="name mono">' + esc(item.action) + '</td><td class="mono">' + esc(item.payload) + "</td></tr>";
+    }).join("");
+    var body = can("audit.read")
+      ? (rows || '<tr><td colspan="4"><div class="empty">Записей пока нет.</div></td></tr>')
+      : '<tr><td colspan="4"><div class="empty">Журнал аудита доступен ролям архитектора и аудитора.</div></td></tr>';
+    return head("Журнал аудита", "Действия платформы фиксируются с пользователем, сервисом и объектом: подтверждение пар, DQ-скан, сборка SQL, вопросы ассистенту, контроли cut-over. Таблица <b>audit</b>.",
+      '<span class="pill-wave">' + (state.audit ? state.audit.length : 0) + " записей</span>") +
+      '<div class="panel"><div class="panel-head"><h2>События</h2><span class="hint">GET /audit · сортировка по времени</span></div>' +
+      '<div class="panel-body flush" style="overflow-x:auto"><table class="grid"><thead><tr><th>Время</th><th>Пользователь</th><th>Действие</th><th>Объект</th></tr></thead><tbody>' +
+      body + "</tbody></table></div></div>";
+  }
+
+  var RENDER = { map: screenMap, dq: screenDQ, recon: screenRecon, rules: screenRules, post: screenPost, cutover: screenCutover, chat: screenChat, tower: screenTower, svc: screenSvc, audit: screenAudit };
+
+  var COUNTERS = {
+    map: function () { return MAPPING.filter(function (r) { return !r.auto && !state.autoDone[r.src]; }).length; },
+    dq: function () { return state.dqRan ? issues().length : 0; },
+    recon: function () { return RECON.filter(function (r) { return Math.abs(delta(r)) > 0.01; }).length; }
+  };
+
+  function renderMenus() {
+    var bar = document.getElementById("menubar");
+    bar.textContent = "";
+    MENUS.forEach(function (menu) {
+      var wrap = document.createElement("div");
+      wrap.className = "menu";
+      var button = document.createElement("button");
+      button.type = "button";
+      button.textContent = menu.name;
+      button.dataset.menu = menu.name;
+      wrap.appendChild(button);
+      var drop = document.createElement("div");
+      drop.className = "dropdown";
+      menu.items.forEach(function (item) {
+        if (item[0] === "sep") {
+          var sep = document.createElement("div");
+          sep.className = "sep";
+          drop.appendChild(sep);
+          return;
+        }
+        var entry = document.createElement("button");
+        entry.type = "button";
+        entry.dataset.act = item[1];
+        entry.disabled = item[3] === true;
+        entry.appendChild(document.createTextNode(item[0]));
+        var key = document.createElement("span");
+        key.className = "key";
+        key.textContent = item[2] || "";
+        entry.appendChild(key);
+        drop.appendChild(entry);
+      });
+      wrap.appendChild(drop);
+      bar.appendChild(wrap);
+    });
+  }
+
+  function renderWaves() {
+    var host = document.getElementById("waves");
+    host.textContent = "";
+    WAVES.forEach(function (wave) {
+      var button = document.createElement("button");
+      button.type = "button";
+      button.className = "wave" + (state.wave === wave.n ? " on" : "");
+      button.dataset.act = "wave";
+      button.dataset.n = wave.n;
+      button.textContent = "В" + wave.n;
+      host.appendChild(button);
+    });
+  }
+
+  function renderRail() {
+    var rail = document.getElementById("rail");
+    rail.textContent = "";
+    var groups = [];
+    SCREENS.forEach(function (s) { if (groups.indexOf(s.group) === -1) { groups.push(s.group); } });
+    groups.forEach(function (group) {
+      var title = document.createElement("div");
+      title.className = "group";
+      title.textContent = group;
+      rail.appendChild(title);
+      SCREENS.filter(function (s) { return s.group === group; }).forEach(function (screen) {
+        var button = document.createElement("button");
+        button.type = "button";
+        button.className = "nav" + (state.screen === screen.id ? " on" : "");
+        button.dataset.screen = screen.id;
+        var num = document.createElement("i");
+        num.textContent = screen.num;
+        button.appendChild(num);
+        button.appendChild(document.createTextNode(screen.name));
+        if (COUNTERS[screen.id] && COUNTERS[screen.id]()) {
+          var cnt = document.createElement("span");
+          cnt.className = "cnt hot";
+          cnt.textContent = COUNTERS[screen.id]();
+          button.appendChild(cnt);
+        }
+        rail.appendChild(button);
+      });
+    });
+  }
+
+  function renderSide() {
+    var side = document.getElementById("side");
+    side.textContent = "";
+    var title = document.createElement("h3");
+    title.textContent = "Микросервисы";
+    side.appendChild(title);
+    SERVICES.forEach(function (svc) {
+      var row = document.createElement("button");
+      row.type = "button";
+      row.className = "svc-row";
+      row.dataset.act = "svc";
+      row.dataset.id = svc.name;
+      var dot = document.createElement("span");
+      dot.className = "dot" + (svc.status === "ok" ? "" : " warn");
+      row.appendChild(dot);
+      var block = document.createElement("div");
+      var name = document.createElement("b");
+      name.textContent = svc.name;
+      block.appendChild(name);
+      block.appendChild(document.createElement("br"));
+      var meta = document.createElement("span");
+      meta.textContent = "v" + svc.version + " · " + svc.rps + " rps";
+      block.appendChild(meta);
+      row.appendChild(block);
+      var num = document.createElement("span");
+      num.className = "svc-num";
+      num.textContent = svc.p95 + " ms";
+      row.appendChild(num);
+      side.appendChild(row);
+    });
+  }
+
+  function renderLog() {
+    var log = document.getElementById("log");
+    log.textContent = "";
+    state.log.forEach(function (line) {
+      var row = document.createElement("div");
+      row.innerHTML = line;
+      log.appendChild(row);
+    });
+    log.scrollTop = log.scrollHeight;
+  }
+
+  function logLine(kind, service, text) {
+    var stamp = new Date().toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+    state.log.push("<span class='t'>[" + stamp + "]</span> <b>" + service + "</b> " + text + (kind === "ok" ? " <span class='ok'>ok</span>" : ""));
+    renderLog();
+  }
+
+  function toast(text, kind) {
+    var box = document.getElementById("toasts");
+    var node = document.createElement("div");
+    node.className = "toast" + (kind ? " " + kind : "");
+    node.textContent = text;
+    box.appendChild(node);
+    setTimeout(function () { node.remove(); }, 3200);
+  }
+
+  function renderJob() {
+    var host = document.getElementById("job");
+    if (!state.job.running && !state.job.percent) { host.textContent = ""; return; }
+    host.innerHTML = "<div class='jobbar'><span>волна " + state.wave + " · " + esc(state.job.phase) + "</span><div class='bar'><i style='width:" +
+      state.job.percent + "%'></i></div><span>" + state.job.percent + "%</span></div>";
+  }
+
+  function render() {
+    var screen = SCREENS.filter(function (s) { return s.id === state.screen; })[0];
+    document.getElementById("doc-title").textContent = "— " + screen.name.toLowerCase() + " · волна " + state.wave + " · прод-контур";
+    document.getElementById("pane").innerHTML = RENDER[state.screen]();
+    renderRail();
+    renderSide();
+    renderWaves();
+    renderJob();
+    renderUser();
+    applyGating();
+    enhanceTables();
+    var mode = document.getElementById("mode");
+    if (mode) {
+      mode.innerHTML = state.mode === "live"
+        ? "<b style='color:var(--green)'>●</b> API live · " + state.latency + " ms · v" + esc(state.version)
+        : "<b style='color:#dfa63c'>●</b> демо-режим · API не отвечает";
+    }
+  }
+
+  function renderUser() {
+    var host = document.getElementById("userchip");
+    if (!host) { return; }
+    host.textContent = "";
+    if (state.mode === "live" && state.user) {
+      host.classList.remove("hidden");
+      var name = document.createElement("div");
+      name.className = "uchip-name";
+      name.textContent = state.user.name;
+      var role = document.createElement("div");
+      role.className = "uchip-role";
+      role.textContent = state.user.role_title;
+      var out = document.createElement("button");
+      out.type = "button";
+      out.className = "btn small quiet";
+      out.dataset.act = "logout";
+      out.textContent = "Выйти";
+      host.appendChild(name);
+      host.appendChild(role);
+      host.appendChild(out);
+      return;
+    }
+    host.classList.add("hidden");
+  }
+
+  function applyGating() {
+    Array.prototype.forEach.call(document.querySelectorAll("#pane [data-act], .toolbar [data-act]"), function (node) {
+      var need = PERM_OF[node.dataset.act];
+      var allowed = !need || can(need);
+      node.disabled = !allowed;
+      node.title = allowed ? "" : "нет права: " + need;
+    });
+  }
+
+  function loadAudit() {
+    if (state.mode !== "live" || !state.token) { state.audit = []; render(); return; }
+    apiCall("/audit").then(function (payload) {
+      state.audit = payload.items;
+      render();
+    }).catch(function () {
+      state.audit = [];
+      render();
+    });
+  }
+
+  function inspector(kind, id) {
+    var rows = [];
+    var title = "Запись";
+    var api = "";
+    if (kind === "mapping") {
+      var m = MAPPING.filter(function (r) { return r.src === id; })[0];
+      title = m.src;
+      rows = [["Поле-источник", m.src], ["Тип в legacy", m.type], ["Домен", m.dom], ["Кандидат ЦФТ", m.tgt], ["Уверенность", m.score + "%"], ["Статус", state.autoDone[m.src] ? "подтверждено" : m.auto ? "авто-мэтч" : "требует ревью"]];
+      api = m.api;
+    }
+    if (kind === "client") {
+      var c = CLIENTS.filter(function (r) { return r.id === id; })[0];
+      title = c.id;
+      rows = [["ИНН", c.inn], ["Контрольное число ИНН", innValid(c.inn) ? "корректно" : "не сходится"], ["БИК", c.bik], ["Расчётный счёт", c.acc], ["Остаток", money(c.bal) + " ₽"]];
+      api = "GET /api/v1/dq/scan/{table}";
+    }
+    if (kind === "recon") {
+      var parts = id.split("|");
+      var r = RECON.filter(function (x) { return x.account === parts[0] && x.cur === parts[1]; })[0];
+      title = "Счёт " + r.account;
+      rows = [["Валюта", r.cur], ["Legacy", money(r.legacy)], ["ЦФТ-Банк", money(r.cft)], ["Разница", money(delta(r))], ["Причина", CAUSE[r.cause]]];
+      api = "GET /api/v1/recon/" + state.wave;
+    }
+    if (kind === "posting") {
+      var p = POSTINGS.filter(function (x) { return x.account === id; })[0];
+      title = "Счёт " + p.account;
+      rows = [["Дата", p.date], ["Дт", money(p.dt)], ["Кт", money(p.kt)], ["Дельта", money(postDelta(p))], ["Состояние", postDelta(p) === 0 ? "сбалансировано" : "разбаланс"]];
+      api = "GET /api/v1/postings/balance";
+    }
+    if (kind === "rule") {
+      var rr = RULES.filter(function (x) { return x.id === id; })[0];
+      title = rr.id + " · " + rr.title;
+      rows = [["Домен", rr.dom], ["Статус", rr.state], ["SQL", rr.sql], ["Граничные случаи", rr.cases.join(", ")]];
+      api = "POST /api/v1/rules/compile";
+    }
+    if (kind === "step") {
+      var s = STEPS.filter(function (x) { return x[0] === id; })[0];
+      title = s[0] + " · " + s[1];
+      rows = [["Роль", s[2] || "не назначена"], ["Выход", s[3] || "не описан"], ["Процесс", "cutover-wave-5"]];
+      api = "GET /api/v1/cutover/cutover-wave-5";
+    }
+    if (kind === "domain") {
+      var d = DOMAINS.filter(function (x) { return x.name === id; })[0];
+      title = "Домен " + d.name;
+      rows = [["Вес", d.weight], ["Прогресс", Math.round(d.progress * 100) + "%"], ["Открытых дефектов", d.defects], ["Пропусков S2T", d.gaps], ["Провалов DQ", d.dq], ["Риск", risk(d)]];
+      api = "GET /api/v1/tower/readiness";
+    }
+    if (kind === "service") {
+      var sv = SERVICES.filter(function (x) { return x.name === id; })[0];
+      title = sv.name;
+      rows = [["Версия", sv.version], ["Назначение", sv.note], ["Нагрузка", sv.rps + " rps"], ["p95", sv.p95 + " ms"], ["Статус", sv.status === "ok" ? "online" : "деградация"]];
+      api = "GET /healthz";
+    }
+
+    document.getElementById("inspect-title").textContent = title;
+    var body = rows.map(function (pair) {
+      return "<dt>" + esc(pair[0]) + "</dt><dd" + (String(pair[0]).length > 8 ? " class='mono'" : "") + ">" + esc(pair[1]) + "</dd>";
+    }).join("");
+    document.getElementById("inspect-body").innerHTML = '<dl class="kv">' + body + "</dl>" +
+      '<div class="dnote">Вызов сервиса: <b class="mono">' + esc(api) + "</b></div>";
+    document.getElementById("inspect").classList.add("on");
+  }
+
+  function closeInspect() {
+    document.getElementById("inspect").classList.remove("on");
+  }
+
+  function openModal() { document.getElementById("modal").classList.add("on"); }
+  function closeModal() { document.getElementById("modal").classList.remove("on"); }
+
+  function toggleLog(force) {
+    var win = document.getElementById("logwin");
+    var next = typeof force === "boolean" ? force : win.classList.contains("hidden");
+    win.classList.toggle("hidden", !next);
+  }
+
+  function startJob() {
+    closeModal();
+    toggleLog(true);
+    state.job = { running: true, percent: 8, phase: "РКО" };
+    renderJob();
+    if (state.mode === "live") { startWaveStream(); return; }
+    logLine("info", "gateway", "волна " + state.wave + " запущена локально · демо-контур");
+    runLocalJob();
+  }
+
+  function startWaveStream() {
+    apiCall("/waves/" + state.wave + "/start", { method: "POST", body: {} })
+      .then(function (payload) { logLine("ok", "gateway", "POST /waves/" + state.wave + "/start → " + payload.job); })
+      .catch(function () { logLine("warn", "gateway", "старт волны не подтверждён сервером"); });
+    if (typeof EventSource === "undefined") { runLocalJob(); return; }
+    stopTelemetry();
+    waveSource = new EventSource(API_BASE + "/waves/" + state.wave + "/progress");
+    waveSource.onmessage = function (message) {
+      var data = JSON.parse(message.data);
+      state.job.percent = data.percent;
+      state.job.phase = data.percent > 70 ? "сверка" : data.percent > 40 ? "проводки" : "РКО";
+      renderJob();
+      if (data.percent >= 100) { finishJob(); }
+    };
+    waveSource.onerror = function () {
+      if (waveSource) { waveSource.close(); waveSource = null; }
+      logLine("warn", "gateway", "SSE-поток оборвался — локальный прогресс");
+      runLocalJob();
+    };
+  }
+
+  function finishJob() {
+    if (waveSource) { waveSource.close(); waveSource = null; }
+    state.job.running = false;
+    state.job.percent = 100;
+    renderJob();
+    logLine("ok", "tower-svc", "волна " + state.wave + " загружена: 100%");
+    toast("Волна " + state.wave + " загружена, остатки сверены");
+    if (state.mode === "live") { loadAll(); render(); }
+  }
+
+  function runLocalJob() {
+    var timer = setInterval(function () {
+      state.job.percent = Math.min(state.job.percent + 9 + Math.round(Math.random() * 7), 100);
+      state.job.phase = state.job.percent > 70 ? "сверка" : state.job.percent > 40 ? "проводки" : "РКО";
+      renderJob();
+      if (state.job.percent >= 100) { clearInterval(timer); finishJob(); }
+    }, 600);
+  }
+
+  function sendChat(question) {
+    state.chat.push({ q: question });
+    state.chat.push({ typing: true });
+    render();
+    if (state.mode === "live") {
+      apiCall("/assist/ask", { method: "POST", body: { question: question, domain: state.filter } }).then(function (payload) {
+        state.chat.pop();
+        state.chat.push({ a: payload.answer, source: payload.sources.length ? payload.sources[0] : "" });
+        logLine("ok", "assist-svc", "POST /assist/ask → " + (payload.sources.length ? payload.sources.join(", ") : "отказ"));
+        render();
+      }).catch(function () {
+        state.chat.pop();
+        state.chat.push({ a: "assist-svc недоступен: сервер не отвечает.", source: "" });
+        render();
+      });
+      return;
+    }
+    setTimeout(function () {
+      var docs = retrieve(question, state.filter);
+      state.chat.pop();
+      state.chat.push({
+        a: docs.length ? "По документу «" + docs[0].id + "»: " + docs[0].text + "." : "В загруженных документах нет ответа на этот вопрос.",
+        source: docs.length ? docs[0].id : ""
+      });
+      render();
+      var chat = document.getElementById("chat");
+      if (chat) { chat.scrollTop = chat.scrollHeight; }
+    }, 520);
+  }
+
+  function handleAction(target) {
+    var act = target.dataset.act;
+    var need = PERM_OF[act];
+    if (need && !can(need)) {
+      toast("Нет права «" + need + "» для роли " + (state.user ? state.user.role_title : "демо"), "err");
+      return;
+    }
+    if (act === "go-map") { state.screen = "map"; render(); }
+    if (act === "csv") { csvExport(); }
+    if (act === "connect") { toast("Подключаюсь к API " + API_BASE + "…"); bootstrap(); }
+    if (act === "go-svc") { state.screen = "svc"; render(); }
+    if (act === "run-wave") { openModal(); }
+    if (act === "reconcile") { state.screen = "recon"; toast("Сверка волны " + state.wave + " запущена"); render(); }
+    if (act === "open-log") { toggleLog(true); }
+    if (act === "refresh") { toast("Данные обновлены · " + new Date().toLocaleTimeString("ru-RU")); render(); }
+    if (act === "export") { toast("Отчёт выгружен: recon-wave-" + state.wave + ".xlsx"); }
+    if (act === "accept") {
+      state.autoDone[target.dataset.id] = true;
+      if (state.mode === "live") {
+        apiCall("/s2t/confirm", { method: "POST", body: { src: target.dataset.id, target: "" } })
+          .then(function () { toast("Пара подтверждена на сервере: " + target.dataset.id); })
+          .catch(function () { toast("Сервер недоступен — подтверждено локально", "warn"); });
+      } else {
+        toast("Пара подтверждена локально: " + target.dataset.id, "warn");
+      }
+      render();
+    }
+    if (act === "confirm-auto") {
+      var auto = MAPPING.filter(function (r) { return r.auto; });
+      auto.forEach(function (r) { state.autoDone[r.src] = true; });
+      if (state.mode === "live") {
+        Promise.all(auto.map(function (r) {
+          return apiCall("/s2t/confirm", { method: "POST", body: { src: r.src, target: r.tgt } }).catch(function () { return null; });
+        })).then(function () { toast("Авто-мэтчей подтверждено на сервере: " + auto.length); });
+      }
+      toast("Подтверждено авто-мэтчей: " + auto.length);
+      render();
+    }
+    if (act === "dq-scan") {
+      state.dqRan = true;
+      if (state.mode === "live") {
+        apiCall("/dq/scan/clients").then(function (payload) {
+          state.liveIssues = payload.issues;
+          logLine("ok", "dq-svc", "GET /dq/scan/clients → " + payload.issues.length + " нарушений из " + payload.rows);
+          toast("DQ-сервис вернул " + payload.issues.length + " нарушений");
+          render();
+        }).catch(function () {
+          state.liveIssues = null;
+          toast("dq-svc недоступен — локальный профиль", "warn");
+          render();
+        });
+        return;
+      }
+      logLine("info", "dq-svc", "профиль домена «Клиенты» выполнен локально");
+      toast("Профиль домена обновлён");
+      render();
+    }
+    if (act === "filter") { state.filter = target.dataset.cause; render(); }
+    if (act === "dom") { state.filter = target.dataset.dom; render(); }
+    if (act === "wave") { state.wave = Number(target.dataset.n); toast("Контур переключён на волну " + state.wave); render(); }
+    if (act === "open-rule") { state.selected = target.dataset.id; render(); }
+    if (act === "rule-compile") {
+      var field = document.getElementById("rule-text");
+      var out = document.getElementById("rule-out");
+      var text = field ? field.value : "";
+      if (state.mode === "live") {
+        apiCall("/rules/compile", { method: "POST", body: { text: text, domain: "Кредиты" } }).then(function (payload) {
+          if (out) { out.textContent = payload.sql + "\n\n-- граничные случаи: " + payload.cases.join(", "); }
+          logLine("ok", "rule-svc", "POST /rules/compile → " + (payload.needs_review ? "черновик" : "ручной разбор"));
+          toast("SQL собран на сервере · нужно ревью", "warn");
+        }).catch(function () {
+          if (out) { out.textContent = "select /* rule-svc недоступен */ 1"; }
+          toast("rule-svc недоступен — демо-заготовка", "warn");
+        });
+        return;
+      }
+      if (out) { out.textContent = "select /* черновик rule-svc: проверьте граничные случаи */ 1"; }
+      logLine("info", "rule-svc", "правило " + target.dataset.id + " пересобрано локально");
+      toast("SQL-черновик обновлён · требуется ревью", "warn");
+    }
+    if (act === "rule-review") { toast("Правило отправлено на ревью аналитику", "warn"); }
+    if (act === "control") {
+      var current = state.controls.filter(function (c) { return c.key === target.dataset.key; })[0];
+      var next = current ? !current.on : true;
+      state.controls.forEach(function (c) { if (c.key === target.dataset.key) { c.on = next; } });
+      if (state.mode === "live") {
+        apiCall("/cutover/controls", { method: "POST", body: { key: target.dataset.key, value: next } })
+          .catch(function () { toast("cutover-svc недоступен — контроль изменён локально", "warn"); });
+      }
+      render();
+    }
+    if (act === "schedule") {
+      if (state.mode === "live") {
+        apiCall("/cutover/schedule", { method: "POST", body: { date: "2026-12-22" } })
+          .catch(function () { toast("cutover-svc недоступен — дата не сохранена", "warn"); });
+      }
+      toast("Дата cut-over назначена: 22.12.2026");
+      logLine("ok", "cutover-svc", "дата переключения зафиксирована");
+    }
+    if (act === "chat-send") {
+      var input = document.getElementById("chat-input");
+      if (input && input.value.trim()) { sendChat(input.value.trim()); }
+    }
+    if (act === "ask") { sendChat(target.dataset.q); }
+    if (act === "copy") {
+      var value = target.dataset.copy;
+      if (navigator.clipboard) { navigator.clipboard.writeText(value).catch(function () { return null; }); }
+      toast("Скопировано в буфер: " + value.slice(0, 32) + "…");
+    }
+    if (act === "svc") { inspector("service", target.dataset.id); }
+    if (act === "role") {
+      document.getElementById("login-user").value = target.dataset.user;
+      document.getElementById("login-pass").value = target.dataset.user + "123";
+      Array.prototype.forEach.call(document.querySelectorAll(".gate-roles .chip"), function (chip) {
+        chip.classList.toggle("on", chip === target);
+      });
+    }
+    if (act === "login") { doLogin(); }
+    if (act === "login-demo") {
+      state.mode = "demo";
+      state.user = null;
+      state.perms = [];
+      stopTelemetry();
+      hideGate();
+      render();
+      toast("Демо-режим: встроенные данные, без API", "warn");
+    }
+    if (act === "logout") { doLogout(); toast("Сеанс закрыт"); }
+    if (act === "about") { openModal(); }
+    if (act === "noop") { toast("Действие недоступно в демо-контуре", "warn"); }
+  }
+
+  document.getElementById("menubar").addEventListener("click", function (event) {
+    var trigger = event.target.closest("[data-menu]");
+    if (trigger) {
+      var menu = trigger.parentElement;
+      Array.prototype.forEach.call(document.querySelectorAll(".menu.open"), function (item) { if (item !== menu) { item.classList.remove("open"); } });
+      menu.classList.toggle("open");
+      return;
+    }
+    var action = event.target.closest("[data-act]");
+    if (!action) { return; }
+    Array.prototype.forEach.call(document.querySelectorAll(".menu.open"), function (item) { item.classList.remove("open"); });
+    handleAction(action);
+  });
+
+  document.getElementById("rail").addEventListener("click", function (event) {
+    var target = event.target.closest("[data-screen]");
+    if (!target) { return; }
+    state.screen = target.dataset.screen;
+    state.selected = null;
+    if (state.screen === "audit") { loadAudit(); return; }
+    render();
+  });
+
+  document.querySelector(".toolbar").addEventListener("click", function (event) {
+    var target = event.target.closest("[data-act]");
+    if (target) { handleAction(target); }
+  });
+
+  document.getElementById("pane").addEventListener("click", function (event) {
+    var pageBtn = event.target.closest("[data-page]");
+    if (pageBtn) {
+      var screen = pageBtn.dataset.page;
+      PAGE[screen] = Math.max((PAGE[screen] || 0) + Number(pageBtn.dataset.dir), 0);
+      render();
+      return;
+    }
+    var button = event.target.closest("[data-act]");
+    if (button) { event.stopPropagation(); handleAction(button); return; }
+    var row = event.target.closest("[data-inspect]");
+    if (row) { inspector(row.dataset.inspect, row.dataset.id); }
+  });
+
+  document.getElementById("pane").addEventListener("keydown", function (event) {
+    if (event.key === "Enter" && event.target.id === "chat-input") { sendChat(event.target.value); }
+  });
+
+  document.getElementById("q").addEventListener("input", function (event) {
+    state.q = event.target.value.trim();
+    var pane = document.getElementById("pane");
+    var scroll = pane.scrollTop;
+    render();
+    pane.scrollTop = scroll;
+  });
+
+  document.getElementById("winctl").addEventListener("click", function (event) {
+    var target = event.target.closest("[data-win]");
+    if (!target) { return; }
+    var win = document.getElementById("win");
+    if (target.dataset.win === "max") {
+      var maxed = win.classList.toggle("max");
+      document.body.classList.toggle("maxed", maxed);
+      document.getElementById("maxbtn").textContent = maxed ? "❐" : "□";
+    }
+    if (target.dataset.win === "min" || target.dataset.win === "close") {
+      win.classList.add("hidden");
+      toast("Окно свёрнуто — вернуть можно с панели задач", "warn");
+    }
+  });
+
+  document.getElementById("titlebar").addEventListener("dblclick", function (event) {
+    if (event.target.closest(".cap")) { return; }
+    document.querySelector("[data-win='max']").click();
+  });
+
+  document.getElementById("logwin").addEventListener("click", function (event) {
+    var target = event.target.closest("[data-log]");
+    if (!target) { return; }
+    if (target.dataset.log === "clear") { state.log = []; renderLog(); toast("Журнал очищен"); return; }
+    toggleLog(false);
+  });
+
+  document.getElementById("modal").addEventListener("click", function (event) {
+    var target = event.target.closest("[data-modal]");
+    if (!target) { return; }
+    if (target.dataset.modal === "start") { startJob(); } else { closeModal(); }
+  });
+
+  document.getElementById("inspect").addEventListener("click", function (event) {
+    var target = event.target.closest("[data-inspect]");
+    if (!target) { return; }
+    if (target.dataset.inspect === "act") { toast("Действие выполнено по записи"); }
+    closeInspect();
+  });
+
+  document.getElementById("taskbar").addEventListener("click", function (event) {
+    var target = event.target.closest("[data-task]");
+    if (!target) { return; }
+    if (target.dataset.task === "main") {
+      document.getElementById("win").classList.remove("hidden");
+      return;
+    }
+    toggleLog();
+  });
+
+  document.addEventListener("click", function (event) {
+    if (!event.target.closest(".menu")) {
+      Array.prototype.forEach.call(document.querySelectorAll(".menu.open"), function (item) { item.classList.remove("open"); });
+    }
+  });
+
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape") { closeModal(); closeInspect(); }
+    if (event.key === "F5") { event.preventDefault(); openModal(); }
+    if (event.key === "F12") { event.preventDefault(); toggleLog(); }
+  });
+
+  function renderTaskbar() {
+    var bar = document.getElementById("taskbar");
+    bar.textContent = "";
+    [["main", "АБС-Миграция 2.4", "#d82335"], ["log", "Журнал волны", "#3c424c"]].forEach(function (item) {
+      var button = document.createElement("button");
+      button.type = "button";
+      button.className = "task";
+      button.dataset.task = item[0];
+      var ico = document.createElement("i");
+      ico.style.background = item[2];
+      button.appendChild(ico);
+      button.appendChild(document.createTextNode(item[1]));
+      bar.appendChild(button);
+    });
+    var clock = document.createElement("span");
+    clock.className = "clock";
+    clock.textContent = new Date().toLocaleString("ru-RU", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+    bar.appendChild(clock);
+  }
+
+  function tickClock() {
+    var now = new Date();
+    var text = now.toLocaleString("ru-RU", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+    document.getElementById("clock").textContent = text;
+  }
+
+  state.log = [
+    "<span class='t'>[20:41:02]</span> <b>s2t-svc</b> карта волны 5 загружена · 24 поля",
+    "<span class='t'>[20:41:09]</span> <b>dq-svc</b> профиль домена «РКО» · 0 критичных",
+    "<span class='t'>[20:42:14]</span> <b>recon-svc</b> сверка волны 4 · 2 расхождения объяснены",
+    "<span class='t'>[20:43:01]</span> <b>posting-svc</b> двойная запись · 18 000 000 проводок",
+    "<span class='t'>[20:43:52]</span> <b>cutover-svc</b> волна 5 · 2 критичных контроля не закрыты",
+    "<span class='t'>[20:44:10]</span> <b>tower-svc</b> готовность 84% · прогноз 22.12.2026"
+  ];
+
+  renderMenus();
+  renderWaves();
+  render();
+  renderLog();
+  renderTaskbar();
+  tickClock();
+  setInterval(tickClock, 30000);
+  bootstrap();
+
+  window.__abm = { state: state, mapping: MAPPING, recon: RECON, services: SERVICES };
+})();
+</script>
+</body>
+</html>

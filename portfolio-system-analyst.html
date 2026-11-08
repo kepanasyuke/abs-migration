@@ -1,0 +1,1303 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Портфолио системного аналитика — миграция АБС в ЦФТ-Банк (IBSO)</title>
+<meta name="description" content="8 кейсов под стек вакансии: миграция банковских данных из legacy-АБС в ЦФТ-Банк. Бэкенд на FastAPI, ИИ-модуль, фронтенд на React и TypeScript. Правила линтера и код-стиль.">
+<style>
+  :root{
+    --ink:#24262a;
+    --text:#55595f;
+    --muted:#9aa0a6;
+    --line:#e4e6ee;
+    --line-soft:#eceef5;
+    --blue:#d82335;
+    --blue-dark:#b81b2b;
+    --blue-pale:#fdeef0;
+    --blue-soft:#e3a3aa;
+    --red:#f20c4d;
+    --bg:#ffffff;
+    --bg-alt:#fbfbfe;
+    --bg-gray:#f6f6fb;
+    --shadow:0 2px 10px rgba(36,38,42,.06);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;
+    background:var(--bg-gray);
+    color:var(--text);
+    font:16px/1.62 "Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,h4{color:var(--ink);margin:0;font-weight:600;line-height:1.25}
+  p{margin:0}
+  a{color:var(--blue);text-decoration:none}
+  a:hover{color:var(--blue-dark)}
+  button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+  .wrap{max-width:1240px;margin:0 auto;padding:0 32px}
+  .label{
+    text-transform:uppercase;
+    letter-spacing:.14em;
+    font-size:11px;
+    font-weight:600;
+    color:var(--blue-soft);
+  }
+  .topbar{
+    background:#f6f6fb;
+    color:#6d7278;
+    font-size:12px;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    border-bottom:1px solid #eceef5;
+  }
+  .topbar .wrap{display:flex;justify-content:space-between;gap:16px;height:38px;align-items:center}
+  .topbar b{color:var(--blue);font-weight:600}
+  .crumb{display:flex;gap:8px;align-items:center;color:#9aa0a6}
+  .crumb span{color:#c9ccd4}
+  .head{
+    border-bottom:1px solid var(--line-soft);
+    background:rgba(255,255,255,.94);
+    backdrop-filter:blur(6px);
+    position:sticky;top:0;z-index:40;
+  }
+  .head .wrap{display:flex;align-items:center;justify-content:space-between;gap:24px;height:74px}
+  .brand{display:flex;align-items:center;gap:14px;min-width:0}
+  .mark{
+    width:38px;height:38px;flex:0 0 38px;
+    background:var(--blue);
+    display:grid;place-items:center;
+    color:#fff;font-weight:700;font-size:15px;letter-spacing:.02em;
+    border-radius:2px;
+  }
+  .brand-name{font-size:15px;color:var(--ink);font-weight:600;line-height:1.2}
+  .brand-role{font-size:12px;color:var(--muted);line-height:1.3}
+  .nav{display:flex;gap:28px;font-size:14px}
+  .nav a{color:#4e4f57}
+  .nav a:hover{color:var(--blue)}
+  .hero{padding:64px 0 56px;border-bottom:1px solid var(--line-soft)}
+  .hero-grid{display:grid;grid-template-columns:1.35fr .65fr;gap:56px;align-items:start}
+  .hero h1{font-size:42px;letter-spacing:-.02em;margin:14px 0 20px}
+  .hero h1 em{font-style:normal;color:var(--blue)}
+  .lead{font-size:19px;color:#4e4f57;max-width:640px}
+  .hero-note{margin-top:26px;display:flex;flex-wrap:wrap;gap:10px}
+  .pill{
+    border:1px solid var(--line-soft);
+    border-radius:2px;
+    padding:5px 11px;
+    font-size:12.5px;
+    color:#4e4f57;
+    background:var(--bg-alt);
+  }
+  .kpi{
+    display:grid;grid-template-columns:1fr 1fr;gap:1px;
+    background:var(--line-soft);border:1px solid var(--line-soft);
+  }
+  .kpi div{background:#fff;padding:20px 18px}
+  .kpi b{display:block;font-size:30px;color:var(--ink);font-weight:600;letter-spacing:-.02em;line-height:1.1}
+  .kpi span{display:block;margin-top:6px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+  section.block{padding:56px 0;border-bottom:1px solid var(--line-soft)}
+  section.block.on-white{background:#fff}
+  .block-head{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;margin-bottom:28px}
+  .block-head h2{font-size:28px;letter-spacing:-.01em;margin-top:8px}
+  .block-head p{font-size:14px;color:var(--muted);max-width:460px}
+  .match{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--line-soft);border:1px solid var(--line-soft)}
+  .match-row{background:#fff;padding:16px 18px;display:flex;gap:16px;align-items:baseline}
+  .match-row span{color:var(--blue-soft);font-size:11px;font-weight:600;letter-spacing:.1em;flex:0 0 22px}
+  .match-row div{font-size:14.5px;color:#4e4f57}
+  .match-row b{color:var(--ink);font-weight:600}
+  .filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:26px}
+  .chip{
+    border:1px solid var(--line-soft);
+    padding:7px 15px;border-radius:999px;font-size:13px;color:#55595f;
+    background:#fff;transition:all .15s ease;
+  }
+  .chip:hover{border-color:var(--blue-soft);color:var(--blue)}
+  .chip.on{background:var(--blue);border-color:var(--blue);color:#fff}
+  .chip i{font-style:normal;opacity:.6;margin-left:6px;font-size:11.5px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:20px}
+  .card{
+    border:1px solid var(--line-soft);background:#fff;
+    padding:24px 24px 20px;display:flex;flex-direction:column;gap:14px;
+    text-align:left;transition:border-color .15s ease,box-shadow .15s ease;
+    box-shadow:var(--shadow);position:relative;border-radius:16px;
+  }
+  .card:hover{border-color:#f3c2c8;box-shadow:0 10px 28px rgba(216,35,53,.10)}
+  .card:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+  .card-top{display:flex;justify-content:space-between;align-items:center;gap:12px}
+  .num{font-size:12px;font-weight:600;letter-spacing:.14em;color:var(--blue-soft)}
+  .tags{display:flex;flex-wrap:wrap;gap:6px}
+  .tag{
+    font-size:11px;letter-spacing:.06em;text-transform:uppercase;
+    color:var(--blue);background:var(--blue-pale);padding:4px 10px;border-radius:999px;
+  }
+  .tag.gray{color:#55595f;background:var(--bg-gray)}
+  .card h3{font-size:19px;letter-spacing:-.01em}
+  .card .desc{font-size:14px;color:var(--text)}
+  .card .effect{
+    font-size:13px;color:#4e4f57;border-left:2px solid var(--red);
+    padding-left:12px;margin-top:auto;
+  }
+  .card .open{font-size:13px;color:var(--blue);display:flex;align-items:center;gap:8px;margin-top:2px}
+  .stack{width:100%;border-collapse:collapse;font-size:14px}
+  .stack th{
+    text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.12em;
+    color:var(--muted);font-weight:600;padding:0 0 12px;border-bottom:1px solid var(--line);
+  }
+  .stack td{padding:14px 12px 14px 0;border-bottom:1px solid var(--line-soft);vertical-align:top}
+  .stack td:first-child{color:var(--ink);font-weight:600;width:190px}
+  .stack td:last-child{width:170px;text-align:right}
+  .state{font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:2px;white-space:nowrap}
+  .state.ok{background:var(--blue-pale);color:var(--blue)}
+  .state.todo{background:#fdeef1;color:var(--red)}
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  .panel{border:1px solid var(--line-soft);background:#fff;padding:22px;border-radius:12px}
+  .panel h4{font-size:14px;margin-bottom:14px;display:flex;align-items:center;gap:10px}
+  .panel h4::before{content:"";width:4px;height:14px;background:var(--blue);display:block;border-radius:2px}
+  .rules{margin:0;padding:0;list-style:none;font-size:13.5px}
+  .rules li{padding:9px 0;border-bottom:1px dashed var(--line-soft);color:#4e4f57;display:flex;gap:10px}
+  .rules li:last-child{border-bottom:0}
+  .rules b{color:var(--ink);font-weight:600}
+  .rules code{font-size:12.5px;background:#fff;border:1px solid var(--line-soft);padding:1px 5px;color:var(--blue-dark)}
+  pre{
+    margin:0;background:#fbfbfe;border:1px solid var(--line-soft);
+    padding:16px 18px;overflow:auto;max-height:420px;min-width:0;max-width:100%;
+    border-radius:8px;
+    font:12.5px/1.65 "Cascadia Mono",Consolas,"SF Mono",Menlo,monospace;
+    color:#33383d;
+  }
+  pre .c{color:#9aa3ab}
+  footer{padding:34px 0 46px;background:var(--bg-gray);border-top:1px solid var(--line-soft)}
+  .foot{display:flex;justify-content:space-between;gap:24px;font-size:12.5px;color:var(--muted);flex-wrap:wrap}
+  .foot b{color:#4e4f57;font-weight:600}
+  .overlay{
+    position:fixed;inset:0;background:rgba(30,30,30,.42);
+    display:none;z-index:80;padding:32px;overflow:auto;
+  }
+  .overlay.on{display:block}
+  .drawer{
+    max-width:1000px;margin:0 auto;background:#fff;
+    border:1px solid var(--line);box-shadow:0 24px 60px rgba(36,38,42,.22);
+    border-radius:16px;overflow:hidden;
+  }
+  .drawer-head{padding:26px 30px 20px;border-bottom:1px solid var(--line-soft);position:relative}
+  .drawer-head h3{font-size:24px;letter-spacing:-.01em;margin:8px 0 12px;padding-right:44px}
+  .drawer-head .desc{font-size:14px;color:var(--text);max-width:720px}
+  .close{
+    position:absolute;top:22px;right:22px;width:34px;height:34px;
+    border:1px solid var(--line-soft);border-radius:2px;display:grid;place-items:center;
+    font-size:18px;color:#4e4f57;background:#fff;
+  }
+  .close:hover{border-color:var(--blue);color:var(--blue)}
+  .drawer-body{padding:24px 30px 30px;display:grid;gap:22px;min-width:0}
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+  .field{min-width:0}
+  .field .label{display:block;margin-bottom:6px}
+  .field p{font-size:14px;color:#4e4f57;overflow-wrap:anywhere}
+  .metrics{display:flex;flex-wrap:wrap;gap:10px}
+  .metrics span{font-size:12.5px;color:#55595f;border:1px solid var(--line-soft);padding:6px 12px;background:#fff;border-radius:999px}
+  .metrics b{color:var(--ink);font-weight:600}
+  .tabs{display:flex;gap:4px;border-bottom:1px solid var(--line-soft);margin-bottom:16px;flex-wrap:wrap}
+  .tab{
+    padding:9px 15px;font-size:13px;color:#4e4f57;border:1px solid transparent;border-bottom:0;
+    border-radius:2px 2px 0 0;margin-bottom:-1px;
+  }
+  .tab:hover{color:var(--blue)}
+  .tab.on{background:#fff;border-color:var(--line-soft);color:var(--blue);font-weight:600}
+  .tests-table{width:100%;border-collapse:collapse;font-size:14px;background:#fff;border:1px solid var(--line-soft);border-radius:12px;overflow:hidden}
+  .tests-wrap{overflow-x:auto;border-radius:12px}
+  .tests-table th{
+    text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.12em;
+    color:var(--muted);font-weight:600;padding:14px 16px;border-bottom:1px solid var(--line-soft);
+  }
+  .tests-table td{padding:14px 16px;border-bottom:1px solid var(--line-soft);vertical-align:middle}
+  .tests-table tr:last-child td{border-bottom:0}
+  .tests-table td:first-child{color:var(--ink);font-weight:600}
+  .tests-table td:last-child{text-align:right;white-space:nowrap}
+  .bar{height:6px;background:var(--bg-gray);border-radius:999px;overflow:hidden;min-width:120px}
+  .bar i{display:block;height:100%;background:var(--blue);border-radius:999px}
+  .pass{font-size:12.5px;color:var(--blue);font-weight:600}
+  @media (max-width:720px){
+    .tests-table th:nth-child(3),.tests-table td:nth-child(3){display:none}
+    .tests-table{min-width:100%}
+    .bar{min-width:70px}
+    .topbar .wrap{height:auto;padding:8px 0;flex-direction:column;align-items:flex-start;gap:4px}
+  }
+  @media (max-width:1024px){
+    .hero-grid{grid-template-columns:1fr;gap:34px}
+    .split,.cols,.match{grid-template-columns:1fr}
+    .hero h1{font-size:34px}
+  }
+  @media (max-width:720px){
+    .wrap{padding:0 18px}
+    .nav{display:none}
+    .hero{padding:40px 0 34px}
+    .hero h1{font-size:27px}
+    .lead{font-size:16px}
+    section.block{padding:38px 0}
+    .block-head{flex-direction:column;align-items:flex-start;gap:10px}
+    .block-head h2{font-size:22px}
+    .grid{grid-template-columns:1fr}
+    .overlay{padding:0}
+    .drawer{border:0;min-height:100%;width:100%;max-width:100%}
+    .drawer-head,.drawer-body{padding:20px}
+    pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:none}
+    .stack-wrap{overflow-x:auto}
+    .state{white-space:normal}
+    .stack td:first-child{width:auto}
+    .stack td:last-child{text-align:left}
+    .kpi{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="wrap">
+    <span class="crumb">Главная <span>/</span> Портфолио <span>/</span> <b>Кейсы миграции АБС</b></span>
+    <span>8 кейсов · 2 102 теста · ruff 0 замечаний</span>
+  </div>
+</div>
+
+<header class="head">
+  <div class="wrap">
+    <div class="brand">
+      <div class="mark">SA</div>
+      <div>
+        <div class="brand-name">Системный аналитик · банковские данные</div>
+        <div class="brand-role">SQL · Oracle · миграции АБС · BPMN/UML</div>
+      </div>
+    </div>
+    <nav class="nav">
+      <a href="#cases">Кейсы</a>
+      <a href="#tests">Тесты</a>
+      <a href="#stack">Стек</a>
+      <a href="#lint">Линтер</a>
+      <a href="#approach">Подход</a>
+    </nav>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <span class="label">8 кейсов · бэкенд + ИИ + фронтенд</span>
+      <h1>Миграция банковских данных:<br>от <em>legacy-АБС</em> к ЦФТ-Банку</h1>
+      <p class="lead">Восемь рабочих прототипов на стеке вакансии: анализ структур данных, Source-to-Target Mapping, правила трансформации, сверка остатков и контроль проводок по РКО, кредитам и депозитам. В каждом кейсе — бэкенд на FastAPI, ИИ-модуль и интерфейс аналитика на React и TypeScript.</p>
+      <div class="hero-note">
+        <span class="pill">Гефест</span>
+        <span class="pill">ПрограмБанк</span>
+        <span class="pill">Инверсия</span>
+        <span class="pill">ВаБанк</span>
+        <span class="pill">ЦФТ-Банк / IBSO</span>
+      </div>
+    </div>
+    <div class="kpi">
+      <div><b>8</b><span>кейсов</span></div>
+      <div><b>2 102</b><span>теста пройдено</span></div>
+      <div><b>209–299</b><span>тестов на кейс</span></div>
+      <div><b>0</b><span>замечаний ruff</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="cases">
+  <div class="wrap">
+    <div class="block-head">
+      <div>
+        <span class="label">Кейсы</span>
+        <h2>Что закрывает каждый прототип</h2>
+      </div>
+      <p>Выберите домен — карточки отфильтруются. Внутри кейса: бизнес-задача, роль ИИ, фрагменты кода бэкенда, ИИ-модуля, фронтенда и SQL-маппинга.</p>
+    </div>
+    <div class="filters" id="filters"></div>
+    <div class="grid" id="grid"></div>
+  </div>
+</section>
+
+<section class="block">
+  <div class="wrap">
+    <div class="block-head">
+      <div>
+        <span class="label">Соответствие вакансии</span>
+        <h2>Требование → кейс</h2>
+      </div>
+      <p>Стек, домены и артефакты взяты из текста вакансии: SQL и Oracle, банковская предметная область, ТЗ, BPMN и UML, опыт миграций между АБС.</p>
+    </div>
+    <div class="match" id="match"></div>
+  </div>
+</section>
+
+<section class="block on-white" id="tests">
+  <div class="wrap">
+    <div class="block-head">
+      <div>
+        <span class="label">Проверено</span>
+        <h2>Тесты и линтер по каждому кейсу</h2>
+      </div>
+      <p>Модули лежат в <b>bank-cases/</b>: 8 пакетов в <code>cases/</code>, по 209–299 параметризованных тестов на кейс. Прогон: <b>2 102 passed</b>, <code>ruff check</code> — 0 замечаний.</p>
+    </div>
+    <div class="tests-wrap">
+      <table class="tests-table">
+        <thead>
+          <tr><th>Кейс</th><th>Модуль</th><th>Покрытие</th><th>Тесты</th><th>Статус</th></tr>
+        </thead>
+        <tbody id="tests-body"></tbody>
+      </table>
+    </div>
+    <div class="split" style="margin-top:20px">
+      <div class="panel">
+        <h4>Фрагмент тестов: сверка остатков</h4>
+        <pre id="test-sample-pre"></pre>
+      </div>
+      <div class="panel">
+        <h4>Правила, которые проверяет линтер</h4>
+        <ul class="rules">
+          <li><span>01</span><div><b>Один выход.</b> <code>max-returns = 1</code> (ruff), <code>consistent-return</code> (ESLint).</div></li>
+          <li><span>02</span><div><b>Тело 1–2 строки.</b> <code>max-statements = 8</code>, <code>max-lines-per-function = 2</code>.</div></li>
+          <li><span>03</span><div><b>Без <code>continue</code>, <code>break</code>, <code>while</code>.</b> Перебор — comprehensions и <code>itertools</code>.</div></li>
+          <li><span>04</span><div><b>Аннотации типов.</b> <code>ANN</code> + <code>explicit-function-return-type</code>.</div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="stack">
+  <div class="wrap">
+    <div class="block-head">
+      <div>
+        <span class="label">Стек</span>
+        <h2>На чём собраны кейсы</h2>
+      </div>
+      <p>Статус отражает проверку этой машины: Python и ruff на месте, Node.js и PostgreSQL нужно доустановить перед запуском реальных сервисов.</p>
+    </div>
+    <div class="stack-wrap">
+      <table class="stack">
+        <thead>
+          <tr><th>Слой</th><th>Технологии</th><th>Статус</th></tr>
+        </thead>
+        <tbody id="stack-body"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="lint">
+  <div class="wrap">
+    <div class="block-head">
+      <div>
+        <span class="label">Код-стиль</span>
+        <h2>Правила линтера</h2>
+      </div>
+      <p>Один выход из функции, тело функции 1–2 строки, никаких <code>continue</code>, <code>break</code> и <code>while</code>. Ниже — конфигурации, которые делают эти правила машинно проверяемыми.</p>
+    </div>
+    <div class="split">
+      <div class="panel">
+        <h4>Python · ruff</h4>
+        <pre id="ruff-pre"></pre>
+      </div>
+      <div class="panel">
+        <h4>TypeScript · ESLint</h4>
+        <pre id="eslint-pre"></pre>
+      </div>
+    </div>
+    <div class="panel" style="margin-top:20px">
+      <h4>Как это применяется в кейсах</h4>
+      <ul class="rules">
+        <li><span>01</span><div><b>Один выход.</b> Возврат один и в конце функции: ранние <code>return</code> заменены тернарными выражениями и отдельными предикатами.</div></li>
+        <li><span>02</span><div><b>Функция — 1–2 строки.</b> Тело умещается в одно выражение; сложная логика раскладывается на именованные шаги, а не на вложенные блоки.</div></li>
+        <li><span>03</span><div><b>Без <code>continue</code>, <code>break</code>, <code>while</code>.</b> Перебор — это comprehensions, <code>map</code>, <code>filter</code>, <code>itertools</code>, <code>reduce</code>. Ретраи и пагинация — через адаптеры и лимиты, а не циклы с выходом.</div></li>
+        <li><span>04</span><div><b>Побочные эффекты — на границе.</b> Чистые функции считают, роутер сохраняет: это делает код миграционных правил тестируемым.</div></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="approach">
+  <div class="wrap">
+    <div class="block-head">
+      <div>
+        <span class="label">Подход</span>
+        <h2>Как ведётся миграция</h2>
+      </div>
+      <p>Инженерная последовательность, которая повторяется в каждом домене: от профилирования источника до сверки и отката.</p>
+    </div>
+    <div class="match">
+      <div class="match-row"><span>01</span><div><b>Инвентаризация.</b> Профилирование таблиц legacy: объём, домены значений, NULL, дубли, осиротевшие записи.</div></div>
+      <div class="match-row"><span>02</span><div><b>Карта данных.</b> Source-to-Target Mapping с версионированием и статусом подтверждения по каждому полю.</div></div>
+      <div class="match-row"><span>03</span><div><b>Правила трансформации.</b> Бизнес-правило → SQL → тест-кейс → согласование с банком.</div></div>
+      <div class="match-row"><span>04</span><div><b>Волна.</b> Пробная загрузка, реконсиляция остатков, разбор расхождений по причинам.</div></div>
+      <div class="match-row"><span>05</span><div><b>Контроль проводок.</b> Двойная запись, хронология, закрытые периоды, запрет «красного сальдо».</div></div>
+      <div class="match-row"><span>06</span><div><b>Cut-over.</b> BPMN-процесс переключения с точкой невозврата, окном простоя и планом отката.</div></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot">
+    <span><b>Визуальный язык:</b> палитра #3b739e / #ed2d52, тонкие линии, Open Sans — по мотивам сайта cft.ru</span>
+    <span><b>Данные:</b> метрики кейсов — демонстрационные, из учебных прогонов на синтетических выгрузках</span>
+  </div>
+</footer>
+
+<div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-labelledby="drawer-title" hidden>
+  <div class="drawer">
+    <div class="drawer-head">
+      <button class="close" id="close" aria-label="Закрыть кейс">×</button>
+      <div id="drawer-num" class="label"></div>
+      <h3 id="drawer-title"></h3>
+      <div class="tags" id="drawer-tags" style="margin-bottom:12px"></div>
+      <p class="desc" id="drawer-desc"></p>
+    </div>
+    <div class="drawer-body">
+      <div class="cols">
+        <div class="field"><span class="label">Бизнес-задача</span><p id="d-problem"></p></div>
+        <div class="field"><span class="label">Роль ИИ</span><p id="d-ai"></p></div>
+      </div>
+      <div class="field"><span class="label">Что сделано</span><p id="d-solution"></p></div>
+      <div class="field"><span class="label">Результат</span><div class="metrics" id="d-metrics"></div></div>
+      <div class="field">
+        <div class="tabs" id="tabs"></div>
+        <pre id="code"></pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var PROJECTS = [
+    {
+      id: "s2t",
+      num: "01",
+      title: "S2T-Mapper: карта данных вместо Excel",
+      short: "Source-to-Target Mapping для полей legacy-АБС и ЦФТ-Банка с авто-мэтчем и версионированием.",
+      tags: ["Миграция", "Данные"],
+      problem: "Карта соответствия полей legacy → ЦФТ-Банк собиралась в Excel вручную: расхождения всплывали только на тестовой загрузке, а история правок терялась.",
+      ai: "Считает семантическую близость имён и описаний полей, выдаёт топ-5 кандидатов с оценкой уверенности. Аналитик подтверждает или отклоняет — модель не публикует маппинг сама.",
+      solution: "Профилирование колонок в источнике, ранжирование кандидатов, хранение версий маппинга в PostgreSQL, экспорт спецификации в согласованный формат.",
+      metrics: ["<b>1 240</b> полей размечено", "авто-мэтч <b>94%</b>", "карта данных: 3 недели → <b>4 дня</b>"],
+      code: {
+        "Бэкенд": [
+          "from fastapi import APIRouter, Depends",
+          "from sqlalchemy import text",
+          "",
+          "from app.db import get_session",
+          "",
+          "router = APIRouter(prefix='/s2t', tags=['s2t'])",
+          "",
+          "def profile_sql(table: str, column: str) -> str:",
+          "    return f'select count(*) total, count(distinct {column}) uniq, count(*) filter (where {column} is null) nulls from legacy.{table}'",
+          "",
+          "def column_profile(session, table: str, column: str) -> dict:",
+          "    return dict(session.execute(text(profile_sql(table, column))).mappings().one())",
+          "",
+          "@router.get('/{table}/{column}')",
+          "def read_profile(table: str, column: str, session=Depends(get_session)) -> dict:",
+          "    return column_profile(session, table, column)"
+        ],
+        "ИИ-модуль": [
+          "from operator import itemgetter",
+          "",
+          "",
+          "def similarity(source: str, target: str) -> float:",
+          "    return round(float(embed(source) @ embed(target)), 4)",
+          "",
+          "def candidate(source: str, target: str) -> dict:",
+          "    return {'source': source, 'target': target, 'score': similarity(source, target)}",
+          "",
+          "def rank(source: str, targets: list[str], limit: int = 5) -> list[dict]:",
+          "    return sorted((candidate(source, name) for name in targets), key=itemgetter('score'), reverse=True)[:limit]"
+        ],
+        "Фронтенд": [
+          "type MatchLevel = 'auto' | 'review' | 'manual';",
+          "",
+          "export const byDomain = (rows: MappingRow[], domain: string): MappingRow[] =>",
+          "  rows.filter((row) => row.domain === domain);",
+          "",
+          "export const matchLevel = (score: number): MatchLevel =>",
+          "  score >= 0.9 ? 'auto' : score >= 0.7 ? 'review' : 'manual';",
+          "",
+          "export const pending = (rows: MappingRow[]): number =>",
+          "  rows.filter((row) => matchLevel(row.score) === 'review').length;"
+        ],
+        "SQL": [
+          "-- пары кандидатов: legacy-поле и целевое поле ЦФТ-Банка",
+          "select s.column_name  as source_field,",
+          "       t.column_name  as target_field,",
+          "       s.data_type    as source_type,",
+          "       t.data_type    as target_type,",
+          "       s.owner_system as legacy_abs",
+          "from   s2t.legacy_columns s",
+          "join   s2t.cft_columns t",
+          "       on t.domain = s.domain",
+          "where  s.table_name = 'PAYMENT_DOC'",
+          "   and s.owner_system = 'PROGRAMBANK'",
+          "order by s.column_name;"
+        ]
+      }
+    },
+    {
+      id: "dq",
+      num: "02",
+      title: "DQ-Profiler: качество данных до загрузки",
+      short: "37 правил профилирования legacy: пустые ИНН, битые БИК, отрицательные остатки, дубли клиентов.",
+      tags: ["Данные", "РКО"],
+      problem: "Дефекты источника обнаруживались уже в ЦФТ-Банке, когда загрузка волны состоялась: разбор занимал дни и требовал повторного прогона.",
+      ai: "По метрикам нарушения формулирует гипотезу причины и черновик правила очистки или карантина — с привязкой к конкретному счёту и таблице.",
+      solution: "Реестр проверок в коде, единый отчёт по домену, разделение «правило очистки» и «карантин», история прогонов по каждой волне.",
+      metrics: ["<b>37</b> правил качества", "<b>1 900</b> аномалий на пилоте ПрограмБанка", "повторный прогон <b>−70%</b> времени"],
+      code: {
+        "Бэкенд": [
+          "from fastapi import APIRouter, Depends",
+          "",
+          "from app.db import get_session",
+          "from app.rules import RULES, apply_rule",
+          "",
+          "router = APIRouter(prefix='/dq', tags=['dq'])",
+          "",
+          "def violations(session, table: str) -> list[dict]:",
+          "    return [apply_rule(session, table, rule) for rule in RULES]",
+          "",
+          "def summary(rows: list[dict]) -> dict:",
+          "    return {'checks': len(rows), 'failed': sum(row['failed'] for row in rows), 'rows': rows}",
+          "",
+          "@router.get('/{table}/scan')",
+          "def scan(table: str, session=Depends(get_session)) -> dict:",
+          "    return summary(violations(session, table))"
+        ],
+        "ИИ-модуль": [
+          "SYSTEM = 'Ты методолог миграции банковских данных. Отвечай только по переданным метрикам.'",
+          "",
+          "",
+          "def prompt(rule: dict, metric: dict) -> str:",
+          "    return f\"Правило: {rule['title']}. Найдено строк: {metric['failed']}. Дай причину и правило очистки.\"",
+          "",
+          "def explain(rule: dict, metric: dict, llm) -> str:",
+          "    return llm(SYSTEM, prompt(rule, metric))"
+        ],
+        "Фронтенд": [
+          "type Severity = 'critical' | 'warning' | 'ok';",
+          "",
+          "export const severity = (failed: number, total: number): Severity =>",
+          "  failed / total > 0.05 ? 'critical' : failed > 0 ? 'warning' : 'ok';",
+          "",
+          "export const toPercent = (value: number): string =>",
+          "  (value * 100).toFixed(1) + '%';"
+        ],
+        "SQL": [
+          "-- профиль клиентской таблицы legacy-АБС",
+          "select 'CLIENT' as entity,",
+          "       count(*) filter (where inn is null)                 as inn_missing,",
+          "       count(*) filter (where length(inn) not in (10, 12)) as inn_bad_length,",
+          "       count(*) filter (where balance_dt < 0)              as balance_negative",
+          "from   legacy.gefest_client;"
+        ]
+      }
+    },
+    {
+      id: "reconcile",
+      num: "03",
+      title: "Reconciler: сверка остатков после волны",
+      short: "Сравнение сальдо legacy и ЦФТ-Банка по счетам и валютам с разбором каждой разницы.",
+      tags: ["Проводки", "Счета"],
+      problem: "После загрузки волны расхождения находились выборочно, и вопрос «это ошибка миграции или законная курсовая разница» решался вручную по каждому счёту.",
+      ai: "Классифицирует причину расхождения по пяти категориям: курсовая разница, дубль, пропущенная проводка, округление, ручная корректировка.",
+      solution: "Полная сверка по ключу «счёт + валюта + дата», отчёт с агрегатами, обязательная категория для каждой разницы, выгрузка в согласование с банком.",
+      metrics: ["<b>2,4 млн</b> счетов за 11 минут", "объяснено <b>89%</b> расхождений", "разбор волны: <b>2 дня → 4 часа</b>"],
+      code: {
+        "Бэкенд": [
+          "from fastapi import APIRouter, Depends",
+          "",
+          "from app.db import get_session",
+          "from app.queries import balance_diff",
+          "",
+          "router = APIRouter(prefix='/reconcile', tags=['reconcile'])",
+          "",
+          "def diffs(session, wave: str) -> list[dict]:",
+          "    return [dict(row) for row in session.execute(balance_diff(wave)).mappings()]",
+          "",
+          "def totals(rows: list[dict]) -> dict:",
+          "    return {'accounts': len(rows), 'amount': round(sum(row['diff'] for row in rows), 2)}",
+          "",
+          "@router.get('/{wave}')",
+          "def read_diffs(wave: str, session=Depends(get_session)) -> dict:",
+          "    return totals(diffs(session, wave))"
+        ],
+        "ИИ-модуль": [
+          "CAUSES = ('rate', 'duplicate', 'missing_posting', 'rounding', 'manual')",
+          "",
+          "",
+          "def match(diff: dict, llm) -> str:",
+          "    return llm.classify(diff, CAUSES)",
+          "",
+          "def classify(diff: dict, llm) -> dict:",
+          "    return {'account': diff['account'], 'cause': match(diff, llm), 'amount': diff['diff']}"
+        ],
+        "Фронтенд": [
+          "export const grouped = (rows: ReconcileRow[]): Record<string, number> =>",
+          "  rows.reduce((acc, row) => ({ ...acc, [row.cause]: (acc[row.cause] ?? 0) + 1 }), {});",
+          "",
+          "export const isExplained = (row: ReconcileRow): boolean =>",
+          "  row.cause !== 'unknown';",
+          "",
+          "export const unexplained = (rows: ReconcileRow[]): ReconcileRow[] =>",
+          "  rows.filter((row) => !isExplained(row));"
+        ],
+        "SQL": [
+          "-- сверка сальдо: legacy против ЦФТ-Банка",
+          "select l.account,",
+          "       l.currency,",
+          "       l.balance_dt  as legacy_dt,",
+          "       c.balance_dt  as cft_dt,",
+          "       round(c.balance_dt - l.balance_dt, 2) as diff",
+          "from   legacy.balance l",
+          "join   cft.balance c",
+          "       on c.account = l.account",
+          "      and c.currency = l.currency",
+          "      and c.wave = :wave",
+          "where  abs(c.balance_dt - l.balance_dt) > 0.01",
+          "order by abs(c.balance_dt - l.balance_dt) desc;"
+        ]
+      }
+    },
+    {
+      id: "rule2sql",
+      num: "04",
+      title: "Rule2SQL: из бизнес-правила в запрос",
+      short: "Формулировка правилами банка превращается в SQL-набросок, список граничных случаев и тест-кейсы.",
+      tags: ["Кредиты", "Депозиты"],
+      problem: "Правила трансформации жили в тексте ТЗ, разработчик переводил их в SQL по-своему, а расхождения выяснялись на приёмке.",
+      ai: "Переводит формулировку («при досрочном закрытии кредита начисленные проценты переносим на 47427») в SQL и перечисляет граничные случаи: нулевая сумма, частичное досрочное, закрытие в выходной.",
+      solution: "Правило как объект с версией и статусом, генерация черновика SQL, обязательное ревью аналитика, привязка тест-кейсов к правилу.",
+      metrics: ["<b>68</b> правил трансформации", "≈<b>120 ч</b> сэкономлено аналитику", "ревью <b>100%</b> черновиков"],
+      code: {
+        "Бэкенд": [
+          "from fastapi import APIRouter",
+          "from pydantic import BaseModel",
+          "",
+          "from app.ai.generator import to_sql",
+          "",
+          "router = APIRouter(prefix='/rules', tags=['rules'])",
+          "",
+          "class Rule(BaseModel):",
+          "    text: str",
+          "    domain: str",
+          "",
+          "def draft(rule: Rule) -> dict:",
+          "    return {'rule': rule.text, 'sql': to_sql(rule.text, rule.domain), 'status': 'draft'}",
+          "",
+          "@router.post('/compile')",
+          "def compile_rule(rule: Rule) -> dict:",
+          "    return draft(rule)"
+        ],
+        "ИИ-модуль": [
+          "UNKNOWN = 'manual'",
+          "",
+          "",
+          "def keyword(text: str) -> str:",
+          "    lowered = text.lower()",
+          "    matches = (name for name, markers in MARKERS.items() if any(marker in lowered for marker in markers))",
+          "    return next(matches, UNKNOWN)",
+          "",
+          "def to_sql(text: str, domain: str) -> str:",
+          "    fallback = f'select /* {domain}: ручной разбор */ 1'",
+          "    return TEMPLATES.get(keyword(text), fallback)"
+        ],
+        "Фронтенд": [
+          "export const compile = async (text: string, domain: string): Promise<Draft> =>",
+          "  post<Draft>('/rules/compile', { text, domain });",
+          "",
+          "export const canApprove = (draft: Draft): boolean =>",
+          "  draft.sql.trim().length > 0 && draft.edgeCases.length > 0;"
+        ],
+        "SQL": [
+          "-- проверка правила «проценты в 47427 при досрочном закрытии»",
+          "select c.id,",
+          "       sum(p.amount) as interest",
+          "from   cft.credit c",
+          "join   cft.interest p on p.credit_id = c.id",
+          "where  c.close_type = 'EARLY'",
+          "   and c.close_date between :from and :to",
+          "group by c.id",
+          "having sum(p.amount) > 0;"
+        ]
+      }
+    },
+    {
+      id: "postings",
+      num: "05",
+      title: "Posting Guard: двойная запись и хронология",
+      short: "Проверка Дт = Кт по счёту и дате, поиск разорванных и обратных проводок в загруженной волне.",
+      tags: ["Проводки", "Счета"],
+      problem: "Ошибка разбаланса выявлялась на этапе сверки отчётности, когда причины уже не восстанавливались по логам загрузки.",
+      ai: "Суммирует разбаланс по счетам и периодам, предлагает вероятную причину и указывает диапазон проводок для проверки.",
+      solution: "Группировка проводок по счёту и дате, порог допустимого расхождения, отчёт с суммой, ИИ-гипотезой и ссылкой на исходную таблицу legacy.",
+      metrics: ["<b>18 млн</b> проводок в проверке", "разбалансов на 4 волнах: <b>0</b>", "проверка волны <b>&lt; 15 мин</b>"],
+      code: {
+        "Бэкенд": [
+          "from itertools import groupby",
+          "from operator import itemgetter",
+          "",
+          "",
+          "def group_by_account(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:",
+          "    key = itemgetter('account')",
+          "    ordered = sorted(rows, key=key)",
+          "    return [{'account': name, 'rows': list(group)} for name, group in groupby(ordered, key=key)]",
+          "",
+          "def is_balanced(rows: list[dict[str, Any]]) -> bool:",
+          "    return delta(rows) == 0",
+          "",
+          "def unbalanced(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:",
+          "    broken = [item for item in group_by_account(rows) if not is_balanced(item['rows'])]",
+          "    return [{'account': item['account'], 'delta': delta(item['rows'])} for item in broken]"
+        ],
+        "ИИ-модуль": [
+          "def delta(item: dict) -> float:",
+          "    return round(sum(row['dt'] - row['kt'] for row in item['rows']), 2)",
+          "",
+          "def reason(item: dict, llm) -> str:",
+          "    return llm(f\"Счёт {item['account']}: разбаланс {delta(item)} руб. Назови вероятную причину.\")",
+          "",
+          "def report(items: list[dict], llm) -> list[dict]:",
+          "    return [{'account': item['account'], 'delta': delta(item), 'reason': reason(item, llm)} for item in items]"
+        ],
+        "Фронтенд": [
+          "export const deltaColor = (delta: number): string =>",
+          "  delta === 0 ? 'var(--blue)' : 'var(--red)';",
+          "",
+          "export const formatDelta = (delta: number): string =>",
+          "  new Intl.NumberFormat('ru-RU', { minimumFractionDigits: 2 }).format(delta);"
+        ],
+        "SQL": [
+          "-- разбаланс по счёту и дате операции",
+          "select p.account,",
+          "       p.oper_date,",
+          "       sum(p.dt_amount) as dt_total,",
+          "       sum(p.kt_amount) as kt_total,",
+          "       round(sum(p.dt_amount) - sum(p.kt_amount), 2) as delta",
+          "from   cft.posting p",
+          "where  p.wave = :wave",
+          "group by p.account, p.oper_date",
+          "having abs(sum(p.dt_amount) - sum(p.kt_amount)) > 0.01",
+          "order by abs(sum(p.dt_amount) - sum(p.kt_amount)) desc;"
+        ]
+      }
+    },
+    {
+      id: "cutover",
+      num: "06",
+      title: "Cut-over Copilot: BPMN без белых пятен",
+      short: "Процесс переключения на ЦФТ-Банк в BPMN и автоматическая проверка полноты: роли, откат, окно.",
+      tags: ["BPMN", "Миграция"],
+      problem: "В схеме cut-over отсутствовали владелец шага, критерий готовности и точка отката — это обнаруживалось на репетиции переключения.",
+      ai: "Сверяет шаги процесса с чек-листом (роль, вход, выход, точка отката, критерий готовности) и подсвечивает шаги без контроля.",
+      solution: "Модель процесса в BPMN, валидация структуры на бэкенде, семантическая проверка описаний через ИИ, визуализация подсветкой на фронтенде.",
+      metrics: ["<b>24</b> шага, 6 ролей", "пропусков найдено ИИ: <b>11</b>", "репетиция cut-over <b>×3</b>"],
+      code: {
+        "Бэкенд": [
+          "REQUIRED = ('owner', 'rollback', 'window', 'checkpoint')",
+          "",
+          "",
+          "def gaps(process: dict) -> list[str]:",
+          "    return [name for name in REQUIRED if name not in process['controls']]",
+          "",
+          "def readiness(process: dict) -> dict:",
+          "    return {'process': process['id'], 'gaps': gaps(process), 'ready': not gaps(process)}"
+        ],
+        "ИИ-модуль": [
+          "CHECKLIST = 'Для каждого шага: роль, вход, выход, точка отката, критерий готовности.'",
+          "",
+          "",
+          "def semantic_gaps(process: dict, llm) -> list[str]:",
+          "    return llm.audit(process['steps'], CHECKLIST)"
+        ],
+        "Фронтенд": [
+          "export const toNodes = (steps: Step[]): Node[] =>",
+          "  steps.map((step) => ({ id: step.id, position: step.position, data: { label: step.name } }));",
+          "",
+          "export const markGaps = (nodes: Node[], gaps: string[]): Node[] =>",
+          "  nodes.map((node) => ({ ...node, className: gaps.includes(node.id) ? 'gap' : '' }));"
+        ],
+        "SQL": [
+          "-- реестр шагов процесса переключения",
+          "select s.step_no,",
+          "       s.step_name,",
+          "       s.owner_role,",
+          "       s.has_rollback,",
+          "       s.checkpoint",
+          "from   ops.cutover_step s",
+          "where  s.run_id = :run_id",
+          "   and (s.owner_role is null or s.checkpoint is null)",
+          "order by s.step_no;"
+        ]
+      }
+    },
+    {
+      id: "rag",
+      num: "07",
+      title: "Domain Assistant: РКО, кредиты, депозиты",
+      short: "Ассистент аналитика по внутренним регламентам и нормативке — с обязательной ссылкой на источник.",
+      tags: ["РКО", "Кредиты", "Депозиты"],
+      problem: "Ответ на вопрос «как в банке трактуется закрытие счёта при блокировке» искали по 300-страничным регламентам, а ответы коллег расходились.",
+      ai: "RAG по корпусу документов: находит релевантные фрагменты, отвечает только по ним и указывает документ с разделом. Если в корпусе нет ответа — отказывается.",
+      solution: "Индексация документов по доменам, фильтр по домену в запросе, выдача ответа вместе с источниками, журнал вопросов для пополнения базы знаний.",
+      metrics: ["<b>430</b> документов в индексе", "ответ с цитатой <b>92%</b>", "отказ при отсутствии источника"],
+      code: {
+        "Бэкенд": [
+          "from fastapi import APIRouter",
+          "from pydantic import BaseModel",
+          "",
+          "from app.rag import answer",
+          "",
+          "router = APIRouter(prefix='/assistant', tags=['assistant'])",
+          "",
+          "class Ask(BaseModel):",
+          "    question: str",
+          "    domain: str | None = None",
+          "",
+          "@router.post('/ask')",
+          "def ask(payload: Ask) -> dict:",
+          "    return answer(payload.question, payload.domain)"
+        ],
+        "ИИ-модуль": [
+          "REFUSAL = 'В загруженных документах нет ответа на этот вопрос.'",
+          "",
+          "",
+          "def compose(question: str, chunks: list[dict]) -> str:",
+          "    return llm(answer_prompt(question), chunks) if chunks else REFUSAL",
+          "",
+          "def build(question: str, chunks: list[dict]) -> dict:",
+          "    return {'answer': compose(question, chunks), 'sources': [chunk['doc'] for chunk in chunks]}",
+          "",
+          "def answer(question: str, domain: str | None = None) -> dict:",
+          "    return build(question, retrieve(question, domain))"
+        ],
+        "Фронтенд": [
+          "export const hasSources = (reply: Reply): boolean =>",
+          "  reply.sources.length > 0;",
+          "",
+          "export const citing = (reply: Reply): string =>",
+          "  hasSources(reply) ? reply.sources.join(', ') : 'источник не найден';"
+        ],
+        "SQL": [
+          "-- журнал вопросов: пробелы в базе знаний",
+          "select q.domain,",
+          "       q.question,",
+          "       count(*) as asked,",
+          "       count(*) filter (where q.answered = false) as no_answer",
+          "from   kb.question_log q",
+          "where  q.created_at >= now() - interval '30 days'",
+          "group by q.domain, q.question",
+          "having count(*) filter (where q.answered = false) > 2",
+          "order by no_answer desc;"
+        ]
+      }
+    },
+    {
+      id: "tower",
+      num: "08",
+      title: "Control Tower: готовность доменов и прогноз",
+      short: "Дашборд миграции: прогресс по доменам и волнам, риск-скоринг и прогноз даты готовности.",
+      tags: ["Миграция", "Данные"],
+      problem: "Статус проекта собирался из писем: дата готовности называлась интуитивно и не учитывала открытые дефекты и дыры в маппинге.",
+      ai: "Считает риск домена по открытым дефектам, пропускам в S2T и провалам качества данных, прогнозирует дату по скорости прошлых волн.",
+      solution: "Единая модель домена, веса по объёму данных, прогноз с доверительным коридором, ежедневный срез без ручного ввода.",
+      metrics: ["<b>5</b> доменов, 4 волны", "прогноз даты <b>±3 дня</b>", "статус без ручных писем"],
+      code: {
+        "Бэкенд": [
+          "from datetime import date, timedelta",
+          "",
+          "",
+          "def days_left(velocity: list[int], remain: int) -> int:",
+          "    return round(remain / (sum(velocity) / len(velocity)) * 7)",
+          "",
+          "def forecast(velocity: list[int], done: int, total: int) -> date:",
+          "    return date.today() + timedelta(days=days_left(velocity, total - done))"
+        ],
+        "ИИ-модуль": [
+          "def score_parts(domain: dict) -> float:",
+          "    return 0.4 * domain['open_defects'] / 100 + 0.35 * domain['s2t_gaps'] / 50 + 0.25 * domain['dq_failed'] / 1000",
+          "",
+          "def risk(domain: dict) -> dict:",
+          "    return {'domain': domain['name'], 'score': round(score_parts(domain), 2)}"
+        ],
+        "Фронтенд": [
+          "export const status = (score: number): string =>",
+          "  score > 0.6 ? 'risk' : score > 0.3 ? 'watch' : 'ready';",
+          "",
+          "export const totalProgress = (domains: Domain[]): number =>",
+          "  domains.reduce((sum, domain) => sum + domain.weight * domain.progress, 0);"
+        ],
+        "SQL": [
+          "-- готовность доменов к волне миграции",
+          "select d.domain,",
+          "       d.weight,",
+          "       round(avg(m.confirmed) * 100, 1) as mapping_done,",
+          "       count(def.id) filter (where def.state = 'open') as open_defects",
+          "from   mig.domain d",
+          "join   mig.mapping m on m.domain_id = d.id",
+          "left join mig.defect def on def.domain_id = d.id",
+          "group by d.domain, d.weight",
+          "order by mapping_done;"
+        ]
+      }
+    }
+  ];
+
+  var MATCH = [
+    ["SQL и Oracle", "Сложные запросы по <b>legacy и целевой модели</b>: профилирование, сверка, разбаланс"],
+    ["Банковская предметная область", "Домены <b>РКО, кредиты, депозиты, счета, проводки</b> в правилах и кейсах"],
+    ["Source-to-Target Mapping", "Карта данных с <b>версиями и статусом подтверждения</b> по каждому полю"],
+    ["Правила трансформации", "Правило → SQL → тест-кейсы, согласование <b>с представителями банка</b>"],
+    ["BPMN и UML", "Cut-over процесс, проверка полноты шагов, <b>точка отката</b>"],
+    ["Опыт миграций между АБС", "Гефест, ПрограмБанк, Инверсия, ВаБанк → <b>ЦФТ-Банк (IBSO)</b>"],
+    ["Технические задания", "Спецификации маппинга и правил в <b>согласованном формате</b>"],
+    ["Работа с командой", "Контракты API для <b>SQL/PLSQL-разработчиков и архитекторов</b>"]
+  ];
+
+  var STACK = [
+    ["Бэкенд", "Python 3.12+, FastAPI, SQLAlchemy 2, Alembic", "ok", "Python 3.14.7 · установлен"],
+    ["База данных", "PostgreSQL 16 + диалект Oracle для legacy-скриптов", "todo", "psql не найден"],
+    ["Фронтенд", "React 18, TypeScript, Vite, TanStack Query", "todo", "npm не найден"],
+    ["ИИ-слой", "Эмбеддинги + LLM через шлюз, pgvector для RAG", "ok", "клиент через шлюз"],
+    ["Линтеры", "ruff (Python), ESLint + Prettier (TS)", "ok", "ruff 0.17.4 · установлен"],
+    ["Аналитика", "BPMN, UML, SQL-клиент, git", "ok", "git установлен"]
+  ];
+
+  var RUFF = [
+    "# ruff.toml",
+    "line-length = 100",
+    "target-version = 'py312'",
+    "",
+    "[lint]",
+    "select = [",
+    "  'E', 'F', 'W', 'I', 'N', 'UP', 'B', 'SIM',",
+    "  'RET',      # один выход: без лишних return",
+    "  'PLR0911',  # максимум 1 return в функции",
+    "  'PLR0912',  # без раздутой ветвистости",
+    "  'PLR0915',  # без длинных тел",
+    "  'C901',     # сложность функции",
+    "  'ARG', 'ANN',",
+    "]",
+    "",
+    "[lint.pylint]",
+    "max-returns = 1",
+    "max-statements = 8",
+    "max-branches = 2",
+    "",
+    "[lint.flake8-annotations]",
+    "mypy-init-return = true"
+  ];
+
+  var ESLINT = [
+    "// eslint.config.js",
+    "export default [",
+    "  {",
+    "    rules: {",
+    "      'max-lines-per-function': ['error', 2],",
+    "      'max-statements': ['error', 2],",
+    "      complexity: ['error', 3],",
+    "      'no-restricted-syntax': [",
+    "        'error',",
+    "        { selector: 'WhileStatement', message: 'Без while: используйте map/filter/reduce' },",
+    "        { selector: 'ContinueStatement', message: 'Без continue' },",
+    "        { selector: 'BreakStatement', message: 'Без break' },",
+    "      ],",
+    "      'no-else-return': 'error',",
+    "      'consistent-return': 'error',",
+    "      'arrow-body-style': ['error', 'as-needed'],",
+    "      '@typescript-eslint/explicit-function-return-type': 'error',",
+    "    },",
+    "  },",
+    "];"
+  ];
+
+  var TESTS = {
+    s2t: 244,
+    dq: 249,
+    reconcile: 277,
+    rule2sql: 247,
+    postings: 299,
+    cutover: 280,
+    rag: 209,
+    tower: 297
+  };
+
+  var TEST_SAMPLE = [
+    "COMBOS = [(account, currency) for account in ACCOUNTS for currency in CURRENCIES]",
+    "",
+    "",
+    "@pytest.mark.parametrize(('account', 'currency'), COMBOS)",
+    "@pytest.mark.parametrize('offset', (0, 1))",
+    "def test_reconcile_maps_every_target_account(account: str, currency: str, offset: int) -> None:",
+    "    legacy, target = _pair(offset)",
+    "    rows = reconcile.reconcile(legacy, target)",
+    "    found = [row for row in rows if (row['account'], row['currency']) == (account, currency)]",
+    "    assert [row['delta'] for row in found] == [reconcile.diff(AMOUNTS[offset % 60], AMOUNTS[(offset + 7) % 60])]",
+    "",
+    "",
+    "@pytest.mark.parametrize('index', range(30))",
+    "def test_diff_keeps_sign_of_shortage(index: int) -> None:",
+    "    assert reconcile.diff(AMOUNTS[index], AMOUNTS[index] - 5.5) == -5.5"
+  ];
+
+  var TEST_ROWS = [
+    ["s2t", "S2T-Mapper", "cases/s2t.py"],
+    ["dq", "DQ-Profiler", "cases/dq.py"],
+    ["reconcile", "Reconciler", "cases/reconcile.py"],
+    ["rule2sql", "Rule2SQL", "cases/rule2sql.py"],
+    ["postings", "Posting Guard", "cases/postings.py"],
+    ["cutover", "Cut-over Copilot", "cases/cutover.py"],
+    ["rag", "Domain Assistant", "cases/rag.py"],
+    ["tower", "Control Tower", "cases/tower.py"]
+  ];
+
+  function el(tag, className, text) {
+    var node = document.createElement(tag);
+    if (className) { node.className = className; }
+    if (text !== undefined && text !== null) { node.textContent = text; }
+    return node;
+  }
+
+  function html(node, markup) {
+    node.innerHTML = markup;
+    return node;
+  }
+
+  function renderCode(lines) {
+    var pre = el("pre");
+    lines.forEach(function (line, index) {
+      var isComment = /^\s*(#|--|\/\/)/.test(line);
+      var row = el("div", isComment ? "c" : null, line.length ? line : " ");
+      pre.appendChild(row);
+      if (index === lines.length - 1) { pre.lastChild.style.marginBottom = "0"; }
+    });
+    return pre;
+  }
+
+  function tagList(tags, extraClass) {
+    return tags.map(function (name) {
+      return el("span", "tag" + (extraClass ? " " + extraClass : ""), name);
+    });
+  }
+
+  var state = { filter: "Все", open: null, tab: null };
+
+  function domains() {
+    var all = ["Все"];
+    PROJECTS.forEach(function (project) {
+      project.tags.forEach(function (tag) {
+        if (all.indexOf(tag) === -1) { all.push(tag); }
+      });
+    });
+    return all;
+  }
+
+  function countFor(domain) {
+    return domain === "Все"
+      ? PROJECTS.length
+      : PROJECTS.filter(function (project) { return project.tags.indexOf(domain) !== -1; }).length;
+  }
+
+  function renderFilters() {
+    var box = document.getElementById("filters");
+    box.textContent = "";
+    domains().forEach(function (name) {
+      var chip = el("button", "chip" + (state.filter === name ? " on" : ""));
+      chip.type = "button";
+      chip.appendChild(el("span", null, name));
+      chip.appendChild(el("i", null, String(countFor(name))));
+      chip.setAttribute("aria-pressed", String(state.filter === name));
+      chip.addEventListener("click", function () { setFilter(name); });
+      box.appendChild(chip);
+    });
+  }
+
+  function setFilter(name) {
+    state.filter = name;
+    renderFilters();
+    renderGrid();
+  }
+
+  function visibleProjects() {
+    return state.filter === "Все"
+      ? PROJECTS
+      : PROJECTS.filter(function (project) { return project.tags.indexOf(state.filter) !== -1; });
+  }
+
+  function renderCard(project) {
+    var card = el("button", "card");
+    card.type = "button";
+    card.setAttribute("aria-label", "Открыть кейс: " + project.title);
+
+    var top = el("div", "card-top");
+    top.appendChild(el("span", "num", project.num + " / " + project.id));
+    var tags = el("div", "tags");
+    tagList(project.tags).forEach(function (tag) { tags.appendChild(tag); });
+    top.appendChild(tags);
+    card.appendChild(top);
+
+    card.appendChild(el("h3", null, project.title));
+    card.appendChild(el("p", "desc", project.short));
+    card.appendChild(html(el("p", "effect"), project.metrics[0]));
+    var foot = el("div", "card-top");
+    foot.appendChild(el("span", "open", "Открыть кейс →"));
+    foot.appendChild(el("span", "num", TESTS[project.id] + " тестов"));
+    card.appendChild(foot);
+    card.addEventListener("click", function () { openProject(project); });
+    return card;
+  }
+
+  function renderGrid() {
+    var grid = document.getElementById("grid");
+    grid.textContent = "";
+    visibleProjects().forEach(function (project) { grid.appendChild(renderCard(project)); });
+  }
+
+  function renderStack() {
+    var body = document.getElementById("stack-body");
+    body.textContent = "";
+    STACK.forEach(function (row) {
+      var tr = el("tr");
+      tr.appendChild(el("td", null, row[0]));
+      tr.appendChild(el("td", null, row[1]));
+      var cell = el("td");
+      var badge = el("span", "state " + row[2], row[2] === "ok" ? row[3] : row[3]);
+      cell.appendChild(badge);
+      tr.appendChild(cell);
+      body.appendChild(tr);
+    });
+  }
+
+  function renderMatch() {
+    var box = document.getElementById("match");
+    MATCH.forEach(function (row) {
+      var item = el("div", "match-row");
+      var text = el("div");
+      text.appendChild(el("b", null, row[0] + ". "));
+      text.appendChild(document.createTextNode(""));
+      html(text, "<b>" + row[0] + ".</b> " + row[1]);
+      item.appendChild(el("span", null, String(MATCH.indexOf(row) + 1).padStart(2, "0")));
+      item.appendChild(text);
+      box.appendChild(item);
+    });
+  }
+
+  function openProject(project) {
+    state.open = project;
+    state.tab = Object.keys(project.code)[0];
+
+    document.getElementById("drawer-num").textContent = "Кейс " + project.num;
+    document.getElementById("drawer-title").textContent = project.title;
+    document.getElementById("drawer-desc").textContent = project.short;
+
+    var tags = document.getElementById("drawer-tags");
+    tags.textContent = "";
+    tagList(project.tags).forEach(function (tag) { tags.appendChild(tag); });
+
+    document.getElementById("d-problem").textContent = project.problem;
+    document.getElementById("d-ai").textContent = project.ai;
+    document.getElementById("d-solution").textContent = project.solution;
+
+    var metrics = document.getElementById("d-metrics");
+    metrics.textContent = "";
+    html(metrics.appendChild(el("span")), "<b>" + TESTS[project.id] + "</b> тестов пройдено");
+    project.metrics.forEach(function (item) { metrics.appendChild(html(el("span"), item)); });
+
+    renderTabs();
+    renderCodeFor(project, state.tab);
+
+    var overlay = document.getElementById("overlay");
+    overlay.hidden = false;
+    overlay.classList.add("on");
+    document.body.style.overflow = "hidden";
+    document.getElementById("close").focus();
+  }
+
+  function closeProject() {
+    var overlay = document.getElementById("overlay");
+    overlay.classList.remove("on");
+    overlay.hidden = true;
+    document.body.style.overflow = "";
+    state.open = null;
+  }
+
+  function renderTabs() {
+    var tabs = document.getElementById("tabs");
+    tabs.textContent = "";
+    Object.keys(state.open.code).forEach(function (name) {
+      var tab = el("button", "tab" + (state.tab === name ? " on" : ""), name);
+      tab.type = "button";
+      tab.setAttribute("role", "tab");
+      tab.setAttribute("aria-selected", String(state.tab === name));
+      tab.addEventListener("click", function () {
+        state.tab = name;
+        renderTabs();
+        renderCodeFor(state.open, name);
+      });
+      tabs.appendChild(tab);
+    });
+  }
+
+  function renderCodeFor(project, name) {
+    var host = document.getElementById("code");
+    var lang = name === "SQL" ? "SQL" : name === "Фронтенд" ? "TypeScript" : "Python";
+    host.textContent = "";
+    var code = renderCode(project.code[name]);
+    code.setAttribute("aria-label", "Код: " + name + " (" + lang + ")");
+    host.parentNode.replaceChild(codeWithId(code), host);
+  }
+
+  function codeWithId(code) {
+    code.id = "code";
+    return code;
+  }
+
+  function renderTests() {
+    var body = document.getElementById("tests-body");
+    body.textContent = "";
+    TEST_ROWS.forEach(function (item) {
+      var tr = el("tr");
+      tr.appendChild(el("td", null, item[1]));
+      tr.appendChild(el("td", "num", item[2]));
+      var barCell = el("td");
+      var bar = el("div", "bar");
+      var fill = el("i");
+      fill.style.width = Math.round((TESTS[item[0]] / 300) * 100) + "%";
+      bar.appendChild(fill);
+      barCell.appendChild(bar);
+      tr.appendChild(barCell);
+      tr.appendChild(el("td", null, TESTS[item[0]]));
+      tr.appendChild(el("td", "pass", "passed"));
+      body.appendChild(tr);
+    });
+  }
+
+  document.getElementById("close").addEventListener("click", closeProject);
+
+  document.getElementById("overlay").addEventListener("click", function (event) {
+    if (event.target.id === "overlay") { closeProject(); }
+  });
+
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape" && state.open) { closeProject(); }
+  });
+
+  document.getElementById("ruff-pre").appendChild(renderCode(RUFF));
+  document.getElementById("eslint-pre").appendChild(renderCode(ESLINT));
+  document.getElementById("test-sample-pre").appendChild(renderCode(TEST_SAMPLE));
+
+  renderFilters();
+  renderGrid();
+  renderMatch();
+  renderStack();
+  renderTests();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>АБС-Миграция — рабочее место аналитика</title>
+<meta name="description" content="Приложение системного аналитика для миграции банковских данных из legacy-АБС в ЦФТ-Банк: карта данных, качество, сверка, правила, проводки, cut-over, ассистент и контроль готовности.">
+<style>
+  :root{
+    --ink:#24262a;
+    --text:#55595f;
+    --muted:#9aa0a6;
+    --line:#e4e6ee;
+    --line-soft:#eceef5;
+    --red:#d82335;
+    --red-dark:#b81b2b;
+    --red-pale:#fdeef0;
+    --pink:#f20c4d;
+    --green:#1f8a5b;
+    --green-pale:#e8f5ee;
+    --amber:#b7791f;
+    --amber-pale:#fdf3e0;
+    --bg:#f6f6fb;
+    --card:#ffffff;
+    --shadow:0 2px 10px rgba(36,38,42,.06);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;background:var(--bg);color:var(--text);
+    font:18px/1.6 "Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,h4{color:var(--ink);margin:0;font-weight:600;line-height:1.28}
+  p{margin:0}
+  button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+  input,textarea{font:inherit;color:inherit}
+  .app{display:grid;grid-template-columns:296px 1fr;min-height:100vh}
+
+  .side{background:#fff;border-right:1px solid var(--line-soft);padding:24px 0 28px;position:sticky;top:0;height:100vh;overflow:auto}
+  .side-brand{display:flex;gap:14px;align-items:center;padding:0 24px 22px}
+  .mark{width:46px;height:46px;border-radius:12px;background:var(--red);color:#fff;display:grid;place-items:center;font-weight:700;font-size:17px;letter-spacing:.02em}
+  .side-brand b{display:block;color:var(--ink);font-size:18px;letter-spacing:-.01em}
+  .side-brand span{display:block;font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-top:2px}
+  .side-group{padding:14px 24px 6px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+  .navitem{
+    display:flex;align-items:center;gap:12px;width:100%;text-align:left;
+    padding:12px 24px;font-size:17px;color:#464a51;border-left:3px solid transparent;
+  }
+  .navitem i{font-style:normal;font-size:12px;color:var(--muted);width:22px;letter-spacing:.06em}
+  .navitem:hover{background:#fbfbfe;color:var(--red)}
+  .navitem.on{background:var(--red-pale);color:var(--red);border-left-color:var(--red);font-weight:600}
+  .navitem.on i{color:var(--red)}
+  .side-foot{padding:20px 24px 0;font-size:13px;color:var(--muted);border-top:1px solid var(--line-soft);margin-top:18px}
+  .side-foot b{color:var(--ink)}
+
+  .main{display:flex;flex-direction:column;min-width:0}
+  .topbar{
+    background:#fff;border-bottom:1px solid var(--line-soft);
+    padding:0 32px;height:64px;display:flex;align-items:center;justify-content:space-between;gap:20px;
+    position:sticky;top:0;z-index:20;
+  }
+  .crumb{font-size:14px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;display:flex;gap:8px;align-items:center}
+  .crumb b{color:var(--red);font-weight:600}
+  .crumb span{color:#d5d8df}
+  .topstat{display:flex;gap:10px;font-size:14px;color:var(--text);align-items:center}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;margin-right:6px}
+
+  .view{padding:32px;max-width:1400px;width:100%}
+  .page-head{display:flex;justify-content:space-between;gap:24px;align-items:flex-end;margin-bottom:22px;flex-wrap:wrap}
+  .page-head h1{font-size:34px;letter-spacing:-.02em}
+  .page-head p{font-size:17px;color:var(--text);margin-top:8px;max-width:760px}
+  .kicker{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600}
+
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:22px}
+  .kpi{background:var(--card);border:1px solid var(--line-soft);border-radius:16px;padding:18px 20px;box-shadow:var(--shadow)}
+  .kpi b{display:block;font-size:30px;color:var(--ink);letter-spacing:-.02em;line-height:1.15}
+  .kpi span{display:block;font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-top:6px}
+
+  .card{background:var(--card);border:1px solid var(--line-soft);border-radius:16px;padding:22px;box-shadow:var(--shadow)}
+  .card + .card{margin-top:18px}
+  .card-head{display:flex;justify-content:space-between;align-items:center;gap:18px;margin-bottom:16px;flex-wrap:wrap}
+  .card-head h2{font-size:21px}
+  .card-head .hint{font-size:14px;color:var(--muted)}
+
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;padding:11px 20px;border-radius:10px;
+    background:var(--red);color:#fff;font-weight:600;font-size:16px;transition:background .15s ease;
+  }
+  .btn:hover{background:var(--red-dark)}
+  .btn.ghost{background:#fff;color:var(--red);border:1px solid #f0c7cc}
+  .btn.ghost:hover{background:var(--red-pale)}
+  .btn.small{padding:7px 14px;font-size:14px;border-radius:8px}
+  .btn.quiet{background:#fff;color:#55595f;border:1px solid var(--line)}
+  .btn.quiet:hover{background:#fbfbfe;color:var(--red)}
+
+  table.tbl{width:100%;border-collapse:collapse;font-size:16px}
+  table.tbl th{
+    text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);
+    font-weight:600;padding:0 14px 12px 0;border-bottom:1px solid var(--line);white-space:nowrap;
+  }
+  table.tbl td{padding:14px 14px 14px 0;border-bottom:1px solid var(--line-soft);vertical-align:middle}
+  table.tbl tr:last-child td{border-bottom:0}
+  table.tbl td.name{color:var(--ink);font-weight:600}
+  .mono{font-family:"Cascadia Mono",Consolas,Menlo,monospace;font-size:14.5px;color:#33383d}
+  .nowrap{white-space:nowrap}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+  .badge{display:inline-block;font-size:12.5px;letter-spacing:.05em;text-transform:uppercase;padding:4px 11px;border-radius:999px;white-space:nowrap}
+  .badge.auto,.badge.ok{background:var(--green-pale);color:var(--green)}
+  .badge.review,.badge.watch{background:var(--amber-pale);color:var(--amber)}
+  .badge.manual,.badge.risk{background:var(--red-pale);color:var(--red)}
+  .badge.gray{background:#f2f3f7;color:#6d7278}
+
+  .bar{height:8px;border-radius:999px;background:#f2f3f7;overflow:hidden;min-width:90px}
+  .bar i{display:block;height:100%;background:var(--red);border-radius:999px}
+  .bar i.green{background:var(--green)}
+  .bar i.amber{background:#e0a13a}
+
+  .toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 15px;font-size:15px;color:#55595f}
+  .chip:hover{color:var(--red);border-color:#f0c7cc}
+  .chip.on{background:var(--red);border-color:var(--red);color:#fff}
+  .chip i{font-style:normal;opacity:.65;margin-left:6px;font-size:13px}
+
+  pre{margin:0;background:#fbfbfe;border:1px solid var(--line-soft);border-radius:12px;padding:16px 18px;overflow:auto;max-height:380px;font-family:"Cascadia Mono",Consolas,Menlo,monospace;font-size:14.5px;line-height:1.65;color:#33383d}
+  pre .c{color:#9aa3ab}
+
+  .cols{display:grid;grid-template-columns:1.4fr 1fr;gap:18px}
+  .stack{display:grid;gap:18px}
+  .list{margin:0;padding:0;list-style:none}
+  .list li{padding:12px 0;border-bottom:1px dashed var(--line-soft);font-size:16px;display:flex;gap:12px;align-items:flex-start}
+  .list li:last-child{border-bottom:0}
+  .list b{color:var(--ink)}
+  .empty{padding:22px;border:1px dashed var(--line);border-radius:12px;color:var(--muted);font-size:16px;text-align:center}
+
+  .field{display:flex;flex-direction:column;gap:8px}
+  .field label{font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600}
+  textarea,input[type=text]{
+    width:100%;background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px;font-size:17px;color:var(--ink);
+  }
+  textarea{min-height:104px;resize:vertical;line-height:1.55}
+  textarea:focus,input[type=text]:focus{outline:2px solid #f3c2c8;border-color:#eab6bd}
+
+  .toggle{display:flex;align-items:center;gap:12px;padding:10px 0;font-size:16px}
+  .toggle button{width:46px;height:26px;border-radius:999px;background:#e3e5ec;position:relative;transition:background .15s ease;flex:0 0 46px}
+  .toggle button::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .15s ease}
+  .toggle button.on{background:var(--red)}
+  .toggle button.on::after{left:23px}
+
+  .chat{display:flex;flex-direction:column;gap:14px}
+  .msg{border-radius:14px;padding:16px 18px;font-size:16.5px;line-height:1.55;max-width:92%}
+  .msg.q{background:var(--red-pale);color:#7c1724;align-self:flex-end}
+  .msg.a{background:#fff;border:1px solid var(--line-soft)}
+  .sources{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .src{font-size:13px;background:#f2f3f7;color:#55595f;border-radius:999px;padding:4px 11px}
+
+  .meter{display:flex;align-items:center;gap:12px}
+  .meter .bar{flex:1}
+
+  .num{font-size:13px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase}
+
+  @media (max-width:1100px){ .cols{grid-template-columns:1fr} }
+  @media (max-width:820px){
+    .app{grid-template-columns:1fr}
+    .side{position:static;height:auto;border-right:0;border-bottom:1px solid var(--line-soft);padding-bottom:12px}
+    .side-nav{display:grid;grid-template-columns:1fr 1fr}
+    .view{padding:20px}
+    .page-head h1{font-size:27px}
+    .topbar{height:auto;padding:12px 20px;flex-direction:column;align-items:flex-start;gap:6px}
+    .kpis{grid-template-columns:1fr 1fr}
+    table.tbl{font-size:15px}
+  }
+</style>
+</head>
+<body>
+<h1 class="sr-only">АБС-Миграция — рабочее место системного аналитика</h1>
+<div class="app">
+  <aside class="side">
+    <div class="side-brand">
+      <div class="mark">АБС</div>
+      <div>
+        <b>Миграция данных</b>
+        <span>место аналитика</span>
+      </div>
+    </div>
+    <div class="side-group">Модули</div>
+    <div class="side-nav" id="nav"></div>
+    <div class="side-foot">
+      Postgres <b>mig</b> · FastAPI <b>:8000</b><br>
+      2 102 теста · ruff 0
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="crumb">АБС-Миграция <span>/</span> <b id="crumb-here">Карта данных</b></div>
+      <div class="topstat"><span class="dot"></span>Connected · demo dataset · 5 волн</div>
+    </header>
+    <div class="view" id="view"></div>
+  </main>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var SCREENS = [
+    { id: "s2t", num: "01", name: "Карта данных", file: "cases/s2t.py", hint: "Source-to-Target Mapping" },
+    { id: "dq", num: "02", name: "Качество данных", file: "cases/dq.py", hint: "Профилирование legacy" },
+    { id: "reconcile", num: "03", name: "Сверка остатков", file: "cases/reconcile.py", hint: "Реконсиляция волны" },
+    { id: "rule2sql", num: "04", name: "Правила → SQL", file: "cases/rule2sql.py", hint: "Трансформация правил" },
+    { id: "postings", num: "05", name: "Проводки", file: "cases/postings.py", hint: "Двойная запись" },
+    { id: "cutover", num: "06", name: "Cut-over", file: "cases/cutover.py", hint: "Процесс переключения" },
+    { id: "rag", num: "07", name: "Ассистент", file: "cases/rag.py", hint: "Регламенты и РКО" },
+    { id: "tower", num: "08", name: "Готовность", file: "cases/tower.py", hint: "Контроль волн" }
+  ];
+
+  var state = { screen: "s2t", dqRan: false, ruleSql: null, chat: [], reconcileFilter: "Все", s2tStatus: {} };
+
+  var LEGACY = [
+    { id: "f1", table: "PAYMENT_DOC", field: "SUMMA", type: "NUMBER(15,2)", dom: "РКО", rows: 184320, nulls: 12 },
+    { id: "f2", table: "PAYMENT_DOC", field: "DATA_DOC", type: "DATE", dom: "РКО", rows: 184320, nulls: 0 },
+    { id: "f3", table: "PAYMENT_DOC", field: "NSCHET", type: "VARCHAR2(20)", dom: "РКО", rows: 184320, nulls: 340 },
+    { id: "f4", table: "PAYMENT_DOC", field: "VAL", type: "CHAR(3)", dom: "РКО", rows: 184320, nulls: 0 },
+    { id: "f5", table: "PAYMENT_DOC", field: "STATUS", type: "CHAR(1)", dom: "РКО", rows: 184320, nulls: 0 },
+    { id: "f6", table: "CLIENT", field: "INN", type: "VARCHAR2(12)", dom: "Клиенты", rows: 96200, nulls: 1120 },
+    { id: "f7", table: "CLIENT", field: "NAIM", type: "VARCHAR2(120)", dom: "Клиенты", rows: 96200, nulls: 4 },
+    { id: "f8", table: "CLIENT", field: "KOD", type: "NUMBER(10)", dom: "Клиенты", rows: 96200, nulls: 0 },
+    { id: "f9", table: "CREDIT", field: "KREDIT_ID", type: "NUMBER(10)", dom: "Кредиты", rows: 41200, nulls: 0 },
+    { id: "f10", table: "CREDIT", field: "SUMMA_VYDACHI", type: "NUMBER(15,2)", dom: "Кредиты", rows: 41200, nulls: 0 },
+    { id: "f11", table: "CREDIT", field: "STAVKA_PROC", type: "NUMBER(6,2)", dom: "Кредиты", rows: 41200, nulls: 0 },
+    { id: "f12", table: "CREDIT", field: "DATA_ZAKR", type: "DATE", dom: "Кредиты", rows: 41200, nulls: 21800 },
+    { id: "f13", table: "DEPOSIT", field: "DEP_ID", type: "NUMBER(10)", dom: "Депозиты", rows: 18700, nulls: 0 },
+    { id: "f14", table: "DEPOSIT", field: "OSTATOK", type: "NUMBER(15,2)", dom: "Депозиты", rows: 18700, nulls: 0 },
+    { id: "f15", table: "DEPOSIT", field: "PROC_STAVKA", type: "NUMBER(6,2)", dom: "Депозиты", rows: 18700, nulls: 0 },
+    { id: "f16", table: "POSTING", field: "SCHET_DT", type: "VARCHAR2(20)", dom: "Проводки", rows: 4820000, nulls: 0 },
+    { id: "f17", table: "POSTING", field: "SCHET_KT", type: "VARCHAR2(20)", dom: "Проводки", rows: 4820000, nulls: 0 },
+    { id: "f18", table: "POSTING", field: "SUMMA", type: "NUMBER(15,2)", dom: "Проводки", rows: 4820000, nulls: 0 },
+    { id: "f19", table: "POSTING", field: "DATA_OPER", type: "DATE", dom: "Проводки", rows: 4820000, nulls: 0 },
+    { id: "f20", table: "CARD", field: "CARD_ID", type: "NUMBER(10)", dom: "Карты", rows: 74500, nulls: 0 },
+    { id: "f21", table: "CARD", field: "NOMER", type: "VARCHAR2(19)", dom: "Карты", rows: 74500, nulls: 0 },
+    { id: "f22", table: "SCHET", field: "BIK", type: "CHAR(9)", dom: "Счета", rows: 143000, nulls: 310 },
+    { id: "f23", table: "SCHET", field: "OST_DT", type: "NUMBER(15,2)", dom: "Счета", rows: 143000, nulls: 0 },
+    { id: "f24", table: "SCHET", field: "OST_KT", type: "NUMBER(15,2)", dom: "Счета", rows: 143000, nulls: 0 }
+  ];
+
+  var CFT = ["AMOUNT", "DOC_DATE", "PAYER_ACCOUNT", "CURRENCY", "STATUS", "INN", "CLIENT_NAME", "CLIENT_CODE",
+    "CREDIT_ID", "CREDIT_AMOUNT", "RATE", "CLOSE_DATE", "DEPOSIT_ID", "BALANCE", "DEPOSIT_RATE",
+    "ACCOUNT_DT", "ACCOUNT_KT", "POSTING_AMOUNT", "OPER_DATE", "CARD_ID", "CARD_NUMBER", "BIK",
+    "BALANCE_DT", "BALANCE_KT"];
+
+  var SYN = {
+    summa: "amount", data: "date", nschet: "account", schet: "account", schet_dt: "account_dt",
+    val: "currency", valuta: "currency", naim: "name", kod: "code", kredit: "credit", dep: "deposit",
+    ostatok: "balance", ost: "balance", proc: "rate", stavka: "rate", zakr: "close", nomyer: "number",
+    nomer: "number", oper: "oper", dokument: "doc", doc: "doc"
+  };
+
+  function el(tag, cls, text) {
+    var node = document.createElement(tag);
+    if (cls) { node.className = cls; }
+    if (text !== undefined && text !== null) { node.textContent = String(text); }
+    return node;
+  }
+
+  function esc(value) {
+    return String(value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+
+  function tokens(value) {
+    return value.toLowerCase().replace(/ё/g, "е").split(/[._\s]+/).filter(Boolean)
+      .map(function (token) { return SYN[token] || token; });
+  }
+
+  function dice(left, right) {
+    var a = tokens(left), b = tokens(right);
+    var shared = a.filter(function (token) { return b.indexOf(token) !== -1; }).length;
+    return Math.round((2 * shared) / (a.length + b.length) * 100) / 100;
+  }
+
+  function bestMatch(item) {
+    var scored = CFT.map(function (name) { return { target: name, score: dice(item.field, name) }; });
+    scored.sort(function (x, y) { return y.score - x.score; });
+    return scored[0];
+  }
+
+  function level(score) {
+    return score >= 0.9 ? "auto" : score >= 0.6 ? "review" : "manual";
+  }
+
+  function levelRu(name) {
+    return name === "auto" ? "авто" : name === "review" ? "на ревью" : "вручную";
+  }
+
+  var MAPPING = LEGACY.map(function (item) {
+    var best = bestMatch(item);
+    return { item: item, target: best.target, score: best.score, level: level(best.score) };
+  });
+
+  var INN_W10 = [2, 4, 10, 3, 5, 9, 4, 6, 8];
+  var INN_W11 = [7, 2, 4, 10, 3, 5, 9, 4, 6, 8];
+  var INN_W12 = [3, 7, 2, 4, 10, 3, 5, 9, 4, 6, 8];
+
+  function control(digits, weights) {
+    var sum = 0;
+    weights.forEach(function (weight, index) { sum += digits[index] * weight; });
+    return (sum % 11) % 10;
+  }
+
+  function digitsOf(value) {
+    return value.split("").map(Number);
+  }
+
+  function innValid(value) {
+    var ok = /^\d{10}$/.test(value) ? control(digitsOf(value), INN_W10) === Number(value[9]) : false;
+    var ok12 = /^\d{12}$/.test(value)
+      ? control(digitsOf(value), INN_W11) === Number(value[10]) && control(digitsOf(value), INN_W12) === Number(value[11])
+      : false;
+    return /^\d{10}$/.test(value) ? ok : ok12;
+  }
+
+  function bikValid(value) {
+    return /^04\d{7}$/.test(value);
+  }
+
+  function accountValid(value) {
+    return /^\d{20}$/.test(value);
+  }
+
+  var CLIENTS = [
+    { id: "CL-0001", inn: "7707083893", bik: "044525225", account: "40817810099910004312", balance: 125000.0 },
+    { id: "CL-0002", inn: "7707083894", bik: "044525225", account: "40817810099910004313", balance: 8400.5 },
+    { id: "CL-0003", inn: "500100732259", bik: "044030653", account: "40817810400000000001", balance: 0.0 },
+    { id: "CL-0004", inn: "770708389", bik: "044525225", account: "40817810099910004314", balance: 12500.0 },
+    { id: "CL-0005", inn: "77070838X9", bik: "044525225", account: "40817810099910004315", balance: -3200.0 },
+    { id: "CL-0006", inn: "7707083893", bik: "444525225", account: "40817810099910004316", balance: 77000.0 },
+    { id: "CL-0007", inn: "7712345678", bik: "044525225", account: "4081781009991000431", balance: 500.0 },
+    { id: "CL-0008", inn: "5024002119", bik: "044030653", account: "40817810400000000002", balance: 90210.0 },
+    { id: "CL-0009", inn: "5024002118", bik: "044030653", account: "40817810400000000003", balance: 1100.0 },
+    { id: "CL-0010", inn: "", bik: "044525225", account: "40817810099910004317", balance: 0.0 },
+    { id: "CL-0011", inn: "7707083893", bik: "044525226", account: "40817810099910004318", balance: 64000.0 },
+    { id: "CL-0012", inn: "7830000001", bik: "044030653", account: "408178104000000000", balance: 200.0 },
+    { id: "CL-0013", inn: "7736050003", bik: "044525225", account: "40817810099910004319", balance: 15300.0 },
+    { id: "CL-0014", inn: "7736050002", bik: "044525225", account: "40817810099910004320", balance: -75.0 },
+    { id: "CL-0015", inn: "5047083893", bik: "044030653", account: "40817810400000000004", balance: 44000.0 },
+    { id: "CL-0016", inn: "5047083894", bik: "044030653", account: "40817810400000000005", balance: 12800.0 },
+    { id: "CL-0017", inn: "7723456789", bik: "044525225", account: "40817810099910004321", balance: 999.99 },
+    { id: "CL-0018", inn: "7723456780", bik: "044525225", account: "40817810099910004322", balance: 0.01 },
+    { id: "CL-0019", inn: "5047083893", bik: "044030653", account: "40817810400000000006", balance: 71500.0 },
+    { id: "CL-0020", inn: "3012345678", bik: "044525225", account: "40817810099910004323", balance: 31500.0 },
+    { id: "CL-0021", inn: "3012345679", bik: "044525225", account: "40817810099910004324", balance: 4700.0 },
+    { id: "CL-0022", inn: "2460000123", bik: "044030653", account: "40817810400000000007", balance: 22000.0 },
+    { id: "CL-0023", inn: "2460000124", bik: "044030653", account: "40817810400000000008", balance: -160.25 },
+    { id: "CL-0024", inn: "7707083893", bik: "044525225", account: "40817810099910004325", balance: 50000.0 }
+  ];
+
+  function dqIssues() {
+    var seen = {};
+    var issues = [];
+    CLIENTS.forEach(function (client) {
+      var duplicated = seen[client.inn] === true;
+      seen[client.inn] = client.inn ? true : seen[client.inn];
+      if (!innValid(client.inn)) { issues.push({ rule: "ИНН: формат и контрольное число", client: client.id, value: client.inn || "—", level: "risk" }); }
+      if (!bikValid(client.bik)) { issues.push({ rule: "БИК: 9 цифр, префикс 04", client: client.id, value: client.bik, level: "risk" }); }
+      if (!accountValid(client.account)) { issues.push({ rule: "Расчётный счёт: 20 цифр", client: client.id, value: client.account, level: "risk" }); }
+      if (client.balance < 0) { issues.push({ rule: "Отрицательный остаток (красное сальдо)", client: client.id, value: client.balance, level: "watch" }); }
+      if (duplicated && client.inn) { issues.push({ rule: "Дубли клиентов по ИНН", client: client.id, value: client.inn, level: "watch" }); }
+    });
+    return issues;
+  }
+
+  var BALANCES = [
+    { account: "40817810000000000001", currency: "RUB", legacy: 125000.0, cft: 125000.0 },
+    { account: "40817810000000000002", currency: "RUB", legacy: 8400.5, cft: 8400.5 },
+    { account: "40817810000000000003", currency: "RUB", legacy: 0.0, cft: 0.0 },
+    { account: "40702810000000000011", currency: "RUB", legacy: 1743000.0, cft: 1735000.0 },
+    { account: "40702810000000000012", currency: "RUB", legacy: 98000.0, cft: 98000.0 },
+    { account: "47427810000000000021", currency: "RUB", legacy: 43700.0, cft: 43700.01 },
+    { account: "40817810000000000001", currency: "USD", legacy: 1500.0, cft: 1512.4 },
+    { account: "40817810000000000002", currency: "EUR", legacy: 900.0, cft: 900.0 },
+    { account: "20202810000000000031", currency: "USD", legacy: 320000.0, cft: 320150.0 },
+    { account: "30102810000000000041", currency: "RUB", legacy: 500000.0, cft: 500000.0 },
+    { account: "45200810000000000051", currency: "RUB", legacy: 2200000.0, cft: 2200000.0 },
+    { account: "45200810000000000052", currency: "RUB", legacy: 780000.0, cft: 780000.0 },
+    { account: "47400810000000000061", currency: "RUB", legacy: 12500.0, cft: 12500.0 },
+    { account: "47400810000000000062", currency: "RUB", legacy: 0.0, cft: 345.6 },
+    { account: "40817810000000000009", currency: "EUR", legacy: 410.0, cft: 410.0 },
+    { account: "40817810000000000010", currency: "USD", legacy: 77.0, cft: 77.38 },
+    { account: "70601810000000000071", currency: "RUB", legacy: 310000.0, cft: 310000.0 },
+    { account: "70601810000000000072", currency: "RUB", legacy: 42000.0, cft: 42000.0 }
+  ];
+
+  function classify(cell) {
+    if (cell.duplicate) { return "duplicate"; }
+    if (cell.manual) { return "manual"; }
+    if (Math.abs(cell.delta) < 0.01) { return "rounding"; }
+    if (cell.currency !== "RUB") { return "rate"; }
+    return "missing_posting";
+  }
+
+  var CAUSE_RU = {
+    duplicate: "дубль операции",
+    manual: "ручная корректировка",
+    rounding: "округление",
+    rate: "курсовая разница",
+    missing_posting: "пропущенная проводка",
+    unknown: "не объяснено"
+  };
+
+  var RECON = BALANCES.map(function (row, index) {
+    var delta = Math.round((row.cft - row.legacy) * 100) / 100;
+    var cell = { account: row.account, currency: row.currency, delta: delta, duplicate: index === 9, manual: index === 13 };
+    return { account: row.account, currency: row.currency, legacy: row.legacy, cft: row.cft, delta: delta, cause: classify(cell) };
+  });
+
+  var RULES = {
+    interest: {
+      title: "Проценты при досрочном закрытии",
+      sql: "select credit_id, sum(amount) as interest from cft.interest where close_type = 'EARLY' group by credit_id",
+      cases: ["нулевая сумма", "частичное досрочное погашение", "закрытие в выходной день"]
+    },
+    deposit: {
+      title: "Депозит: пролонгация",
+      sql: "select deposit_id, sum(amount) as balance from cft.deposit where state = 'ACTIVE' group by deposit_id",
+      cases: ["нулевой остаток", "пролонгация", "закрытие в последний день месяца"]
+    },
+    payment: {
+      title: "Платёж в проводках",
+      sql: "select doc_id, sum(amount) as total from cft.payment where status = 'ACCEPTED' group by doc_id",
+      cases: ["отклонённый документ", "частичное исполнение", "возврат платежа"]
+    },
+    account: {
+      title: "Сальдо по счёту",
+      sql: "select account, round(sum(dt_amount) - sum(kt_amount), 2) as balance from cft.posting group by account",
+      cases: ["красное сальдо", "закрытый период", "счёт без проводок"]
+    },
+    client: {
+      title: "Дубли клиентов",
+      sql: "select client_id, count(*) as accounts from cft.account group by client_id having count(*) > 1",
+      cases: ["совпадение ИНН", "омонимы", "клиент без счетов"]
+    },
+    card: {
+      title: "Операции по карте",
+      sql: "select card_id, count(*) as operations from cft.card_operation group by card_id",
+      cases: ["перевыпуск карты", "операция без авторизации", "чарджбэк"]
+    }
+  };
+
+  var MARKERS = [
+    ["payment", ["платёж", "платеж", "перевод"]],
+    ["deposit", ["депозит", "вклад"]],
+    ["account", ["счёт", "счет", "сальдо"]],
+    ["client", ["клиент", "дубл"]],
+    ["card", ["карт"]],
+    ["interest", ["процент"]]
+  ];
+
+  function ruleKeyword(text) {
+    var lowered = text.toLowerCase();
+    var found = MARKERS.filter(function (pair) {
+      return pair[1].some(function (marker) { return lowered.indexOf(marker) !== -1; });
+    });
+    return found.length ? found[0][0] : null;
+  }
+
+  var POSTINGS = [
+    { account: "47427810000000000021", dt: 112500.0, kt: 112500.0, date: "2026-11-03", delta: 0 },
+    { account: "47427810000000000022", dt: 43000.0, kt: 43000.5, date: "2026-11-03", delta: -0.5 },
+    { account: "40702810000000000011", dt: 2500000.0, kt: 2500000.0, date: "2026-11-03", delta: 0 },
+    { account: "40817810000000000001", dt: 125000.0, kt: 125000.0, date: "2026-11-03", delta: 0 },
+    { account: "70601810000000000071", dt: 310000.0, kt: 309999.99, date: "2026-11-04", delta: 0.01 },
+    { account: "45200810000000000051", dt: 2200000.0, kt: 2200000.0, date: "2026-11-04", delta: 0 },
+    { account: "30102810000000000041", dt: 500000.0, kt: 500000.0, date: "2026-11-04", delta: 0 },
+    { account: "47400810000000000061", dt: 12500.0, kt: 12500.0, date: "2026-11-05", delta: 0 },
+    { account: "47400810000000000062", dt: 0.0, kt: 345.6, date: "2026-10-31", delta: -345.6 },
+    { account: "40817810000000000009", dt: 410.0, kt: 410.0, date: "2026-11-05", delta: 0 }
+  ];
+
+  var CHRONO_BAD = [
+    { account: "40817810000000000001", date: "2026-11-05", doc: "PL-884213", note: "проводка задним числом" },
+    { account: "47427810000000000022", date: "2026-10-29", doc: "PL-884401", note: "закрытый период" }
+  ];
+
+  var PROCESS = {
+    id: "cutover-wave-4",
+    controls: { owner: true, rollback: false, window: true, checkpoint: false },
+    steps: [
+      { id: "ST-01", name: "Остановка приёма платежей", role: "операционный блок", output: "приказ" },
+      { id: "ST-02", name: "Финальная выгрузка остатков", role: "DBA", output: "дамп" },
+      { id: "ST-03", name: "Загрузка в ЦФТ-Банк", role: "", output: "лог загрузки" },
+      { id: "ST-04", name: "Сверка остатков", role: "аналитик", output: "отчёт" },
+      { id: "ST-05", name: "Включение операций", role: "операционный блок", output: "" },
+      { id: "ST-06", name: "План отката", role: "архитектор", output: "регламент" }
+    ]
+  };
+
+  var CONTROLS = [
+    ["owner", "Владелец каждого шага"],
+    ["rollback", "Точка и план отката"],
+    ["window", "Окно простоя согласовано"],
+    ["checkpoint", "Критерий готовности шага"]
+  ];
+
+  var DOCS = [
+    { id: "rko-1", domain: "РКО", text: "Закрытие счёта при блокировке по решению налогового органа" },
+    { id: "rko-2", domain: "РКО", text: "Открытие расчётного счёта: комплект документов и сроки" },
+    { id: "credit-1", domain: "Кредиты", text: "Досрочное погашение кредита: пересчёт процентов и проводки" },
+    { id: "credit-2", domain: "Кредиты", text: "Начисление резерва по кредиту и перенос на 47427" },
+    { id: "deposit-1", domain: "Депозиты", text: "Депозит: пролонгация договора и начисление процентов" },
+    { id: "deposit-2", domain: "Депозиты", text: "Расторжение депозитного договора юридического лица" }
+  ];
+
+  var REFUSAL = "В загруженных документах нет ответа на этот вопрос.";
+
+  function stems(text) {
+    return text.toLowerCase().replace(/[.,;:!?()«»"'—–\-\/]/g, " ").split(/\s+/)
+      .filter(function (word) { return word.length > 3; })
+      .map(function (word) { return word.slice(0, 4); });
+  }
+
+  function relevance(question, doc) {
+    var q = stems(question), d = stems(doc.text);
+    return q.filter(function (stem) { return d.indexOf(stem) !== -1; }).length;
+  }
+
+  function retrieve(question, domain) {
+    var pool = DOCS.filter(function (doc) { return !domain || doc.domain === domain; });
+    return pool.map(function (doc) { return { doc: doc, score: relevance(question, doc) }; })
+      .filter(function (item) { return item.score > 0; })
+      .sort(function (a, b) { return b.score - a.score; })
+      .slice(0, 2)
+      .map(function (item) { return item.doc; });
+  }
+
+  var DOMAINS = [
+    { name: "РКО", weight: 0.3, progress: 0.94, open_defects: 4, s2t_gaps: 2, dq_failed: 60, velocity: [12, 15, 14, 16] },
+    { name: "Кредиты", weight: 0.25, progress: 0.78, open_defects: 11, s2t_gaps: 6, dq_failed: 240, velocity: [8, 9, 7, 10] },
+    { name: "Депозиты", weight: 0.15, progress: 0.86, open_defects: 5, s2t_gaps: 3, dq_failed: 95, velocity: [6, 7, 7, 8] },
+    { name: "Счета", weight: 0.2, progress: 0.91, open_defects: 6, s2t_gaps: 1, dq_failed: 40, velocity: [10, 11, 12, 11] },
+    { name: "Проводки", weight: 0.1, progress: 0.62, open_defects: 18, s2t_gaps: 9, dq_failed: 410, velocity: [4, 5, 4, 6] }
+  ];
+
+  function riskScore(domain) {
+    return Math.round((0.4 * domain.open_defects / 100 + 0.35 * domain.s2t_gaps / 50 + 0.25 * domain.dq_failed / 1000) * 1000) / 1000;
+  }
+
+  function riskStatus(score) {
+    return score > 0.6 ? "risk" : score > 0.3 ? "watch" : "ok";
+  }
+
+  function riskRu(score) {
+    return score > 0.6 ? "риск" : score > 0.3 ? "наблюдение" : "готово";
+  }
+
+  function money(value) {
+    return new Intl.NumberFormat("ru-RU", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value);
+  }
+
+  function pct(value) {
+    return new Intl.NumberFormat("ru-RU", { style: "percent", maximumFractionDigits: 1 }).format(value);
+  }
+
+  function counts() {
+    var auto = MAPPING.filter(function (row) { return row.level === "auto"; }).length;
+    var review = MAPPING.filter(function (row) { return row.level === "review"; }).length;
+    var manual = MAPPING.filter(function (row) { return row.level === "manual"; }).length;
+    var confirmed = MAPPING.filter(function (row) { return confirmedStatus(row) === "confirmed"; }).length;
+    return { auto: auto, review: review, manual: manual, confirmed: confirmed, total: MAPPING.length };
+  }
+
+  function confirmedStatus(row) {
+    return state.s2tStatus[row.item.id] || (row.level === "auto" ? "auto" : "pending");
+  }
+
+  function kpi(label, value) {
+    return '<div class="kpi"><b>' + esc(value) + "</b><span>" + esc(label) + "</span></div>";
+  }
+
+  function head(title, text, actions) {
+    return '<div class="page-head"><div><div class="kicker">Модуль · миграция АБС → ЦФТ-Банк</div><h1>' +
+      esc(title) + "</h1><p>" + text + "</p></div>" + (actions || "") + "</div>";
+  }
+
+  function screenS2T() {
+    var c = counts();
+    var rows = MAPPING.map(function (row) {
+      var status = confirmedStatus(row);
+      var badge = status === "confirmed" ? '<span class="badge ok">подтверждено</span>'
+        : status === "rejected" ? '<span class="badge manual">отклонено</span>'
+          : status === "auto" ? '<span class="badge auto">авто</span>'
+            : '<span class="badge ' + row.level + '">' + levelRu(row.level) + "</span>";
+      return "<tr><td class='mono'>" + esc(row.item.table) + "." + esc(row.item.field) + "</td>" +
+        "<td class='mono nowrap'>" + esc(row.item.type) + "</td>" +
+        "<td>" + esc(row.item.dom) + "</td>" +
+        "<td class='mono name'>" + esc(row.target) + "</td>" +
+        "<td><div class='meter'><div class='bar'><i style='width:" + Math.round(row.score * 100) + "%'></i></div><span class='num'>" + Math.round(row.score * 100) + "%</span></div></td>" +
+        "<td>" + badge + "</td>" +
+        "<td class='nowrap'><button class='btn small quiet' data-act='accept' data-id='" + row.item.id + "'>Подтвердить</button> " +
+        "<button class='btn small ghost' data-act='reject' data-id='" + row.item.id + "'>Отклонить</button></td></tr>";
+    }).join("");
+
+    return head("Карта данных", "Авто-мэтч полей legacy-АБС на модель ЦФТ-Банка. Оценка — совпадение токенов с учётом словаря синонимов; спорные пары уходят на ревью аналитика.", "") +
+      '<div class="kpis">' + kpi("полей в карте", c.total) + kpi("авто-мэтч", c.auto) +
+      kpi("на ревью", c.review) + kpi("подтверждено", c.confirmed + " / " + c.total) + "</div>" +
+      '<div class="card"><div class="card-head"><h2>Source-to-Target Mapping</h2>' +
+      '<span class="hint">Волна 4 · реестр mig.mapping · v18</span></div>' +
+      '<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Поле источника</th><th>Тип</th><th>Домен</th><th>Кандидат ЦФТ</th><th>Уверенность</th><th>Статус</th><th></th></tr></thead><tbody>' +
+      rows + "</tbody></table></div></div>";
+  }
+
+  function screenDQ() {
+    var issues = dqIssues();
+    var critical = issues.filter(function (item) { return item.level === "risk"; }).length;
+    var body = state.dqRan
+      ? "<div class='card'><div class='card-head'><h2>Нарушения по домену «Клиенты»</h2><span class='hint'>" + issues.length + " записей</span></div>" +
+        "<div style='overflow-x:auto'><table class='tbl'><thead><tr><th>Правило</th><th>Клиент</th><th>Значение</th><th>Уровень</th></tr></thead><tbody>" +
+        issues.map(function (item) {
+          return "<tr><td class='name'>" + esc(item.rule) + "</td><td class='mono'>" + esc(item.client) + "</td><td class='mono'>" + esc(item.value) + "</td><td><span class='badge " + item.level + "'>" + (item.level === "risk" ? "критично" : "предупреждение") + "</span></td></tr>";
+        }).join("") + "</tbody></table></div></div>"
+      : '<div class="empty">Профилирование не запущено. Нажмите «Проверить домен» — 24 клиентские записи пройдут по 5 правилам.</div>';
+
+    return head("Качество данных", "Профилирование legacy до загрузки: контрольные числа ИНН, формат БИК и счёта, красное сальдо, дубли клиентов.",
+      "<button class='btn' data-act='dq-scan'>Проверить домен</button>") +
+      '<div class="kpis">' + kpi("строк проверено", state.dqRan ? CLIENTS.length : 0) +
+      kpi("нарушений", state.dqRan ? issues.length : 0) + kpi("критичных", state.dqRan ? critical : 0) +
+      kpi("правил", 5) + "</div>" + body;
+  }
+
+  function screenReconcile() {
+    var causes = ["Все"].concat(Object.keys(CAUSE_RU).filter(function (key) { return key !== "unknown"; }));
+    var rows = RECON.filter(function (row) { return state.reconcileFilter === "Все" || row.cause === state.reconcileFilter; });
+    var total = RECON.reduce(function (sum, row) { return sum + Math.abs(row.delta); }, 0);
+    var explained = RECON.filter(function (row) { return row.cause !== "unknown"; }).length;
+    var chips = causes.map(function (cause) {
+      var count = cause === "Все" ? RECON.length : RECON.filter(function (row) { return row.cause === cause; }).length;
+      return "<button class='chip" + (state.reconcileFilter === cause ? " on" : "") + "' data-act='filter' data-cause='" + esc(cause) + "'>" + esc(cause === "Все" ? "Все" : CAUSE_RU[cause]) + "<i>" + count + "</i></button>";
+    }).join("");
+
+    var body = rows.map(function (row) {
+      var level = Math.abs(row.delta) < 0.01 ? "ok" : row.cause === "rounding" ? "watch" : "risk";
+      return "<tr><td class='mono'>" + esc(row.account) + "</td><td>" + esc(row.currency) + "</td>" +
+        "<td class='mono nowrap'>" + money(row.legacy) + "</td><td class='mono nowrap'>" + money(row.cft) + "</td>" +
+        "<td class='mono name nowrap'>" + money(row.delta) + "</td><td><span class='badge " + level + "'>" + esc(CAUSE_RU[row.cause]) + "</span></td></tr>";
+    }).join("");
+
+    return head("Сверка остатков", "Сравнение сальдо legacy и целевой АБС по ключу «счёт + валюта». Каждая разница получает причину: курс, дубль, округление, пропуск проводки.",
+      "<button class='btn ghost' data-act='reconcile-export'>Выгрузить в согласование</button>") +
+      '<div class="kpis">' + kpi("счетов", RECON.length) + kpi("сумма расхождений", money(total) + " ₽") +
+      kpi("объяснено", pct(explained / RECON.length)) + kpi("волна", "4 из 5") + "</div>" +
+      '<div class="card"><div class="card-head"><h2>Расхождения волны</h2><div class="toolbar">' + chips + "</div></div>" +
+      "<div style='overflow-x:auto'><table class='tbl'><thead><tr><th>Счёт</th><th>Валюта</th><th>Legacy</th><th>ЦФТ-Банк</th><th>Разница</th><th>Причина</th></tr></thead><tbody>" +
+      body + "</tbody></table></div></div>";
+  }
+
+  function screenRule2SQL() {
+    var rule = state.ruleSql;
+    var output = "";
+    if (rule) {
+      output = "<div class='card'><div class='card-head'><h2>" + esc(RULES[rule.key].title) + "</h2><span class='badge review'>черновик · нужно ревью</span></div>" +
+        "<pre id='rule-out'>" + esc(RULES[rule.key].sql) + "</pre>" +
+        "<div style='margin-top:16px'><div class='kicker' style='margin-bottom:8px'>Граничные случаи для тестов</div><div class='toolbar'>" +
+        RULES[rule.key].cases.map(function (item) { return "<span class='chip'>" + esc(item) + "</span>"; }).join("") + "</div></div></div>";
+    } else if (rule === null) {
+      output = "<div class='empty'>Правило не распознано: в тексте нет ключевых слов домена. Такое правило уходит аналитику на ручной разбор.</div>";
+    }
+
+    return head("Правила → SQL", "Текст бизнес-правила превращается в заготовку запроса и список граничных случаев. Публикация — только после подтверждения аналитиком.", "") +
+      '<div class="card"><div class="card-head"><h2>Правило трансформации</h2><span class="hint">mig.rule · статус draft</span></div>' +
+      '<div class="stack"><div class="field"><label>Формулировка банка</label>' +
+      "<textarea id='rule-text'>При досрочном закрытии кредита начисленные проценты переносим на 47427</textarea></div>" +
+      "<div class='toolbar'><button class='btn' data-act='rule-compile'>Собрать SQL</button>" +
+      "<button class='btn quiet' data-act='rule-sample' data-sample='deposit'>Пример: депозит</button>" +
+      "<button class='btn quiet' data-act='rule-sample' data-sample='card'>Пример: карты</button></div></div></div>" + output;
+  }
+
+  function screenPostings() {
+    var bad = POSTINGS.filter(function (row) { return row.delta !== 0; });
+    var total = POSTINGS.reduce(function (sum, row) { return sum + Math.abs(row.delta); }, 0);
+    var rows = POSTINGS.map(function (row) {
+      var ok = row.delta === 0;
+      return "<tr><td class='mono'>" + esc(row.account) + "</td><td class='mono nowrap'>" + esc(row.date) + "</td>" +
+        "<td class='mono nowrap'>" + money(row.dt) + "</td><td class='mono nowrap'>" + money(row.kt) + "</td>" +
+        "<td class='mono name nowrap'>" + money(row.delta) + "</td>" +
+        "<td><span class='badge " + (ok ? "ok" : "risk") + "'>" + (ok ? "сбалансировано" : "разбаланс") + "</span></td></tr>";
+    }).join("");
+
+    return head("Проводки", "Контроль двойной записи и хронологии в загруженной волне: Дт и Кт по счёту, обратные и задним числом проведённые документы.", "") +
+      '<div class="kpis">' + kpi("счетов", POSTINGS.length) + kpi("разбалансов", bad.length) +
+      kpi("сумма разбаланса", money(total) + " ₽") + kpi("проверка", "< 15 мин") + "</div>" +
+      '<div class="card"><div class="card-head"><h2>Двойная запись по счетам</h2><span class="hint">cft.posting · wave 4</span></div>' +
+      "<div style='overflow-x:auto'><table class='tbl'><thead><tr><th>Счёт</th><th>Дата</th><th>Дт</th><th>Кт</th><th>Дельта</th><th>Статус</th></tr></thead><tbody>" +
+      rows + "</tbody></table></div></div>" +
+      "<div class='card'><div class='card-head'><h2>Хронология</h2><span class='hint'>проводки задним числом и закрытые периоды</span></div><ul class='list'>" +
+      CHRONO_BAD.map(function (row) {
+        return "<li><div class='badge manual'>риск</div><div><b class='mono'>" + esc(row.doc) + "</b> · счёт " + esc(row.account) + " · " + esc(row.date) + " — " + esc(row.note) + "</div></li>";
+      }).join("") + "</ul></div>";
+  }
+
+  function screenCutover() {
+    var gaps = CONTROLS.filter(function (pair) { return !PROCESS.controls[pair[0]]; }).map(function (pair) { return pair[0]; });
+    var critical = gaps.filter(function (key) { return key === "rollback" || key === "checkpoint"; }).length;
+    var coverage = Math.round((1 - gaps.length / CONTROLS.length) * 100);
+    var semantic = PROCESS.steps.filter(function (step) { return !step.role || !step.output; });
+
+    var toggles = CONTROLS.map(function (pair) {
+      var on = PROCESS.controls[pair[0]];
+      return "<div class='toggle'><button class='" + (on ? "on" : "") + "' data-act='control' data-key='" + pair[0] + "' aria-label='" + esc(pair[1]) + "'></button><span>" + esc(pair[1]) + "</span></div>";
+    }).join("");
+
+    var steps = PROCESS.steps.map(function (step) {
+      var gap = !step.role || !step.output;
+      return "<tr><td class='mono'>" + esc(step.id) + "</td><td class='name'>" + esc(step.name) + "</td>" +
+        "<td>" + (step.role ? esc(step.role) : "<span class='badge risk'>нет роли</span>") + "</td>" +
+        "<td>" + (step.output ? esc(step.output) : "<span class='badge risk'>нет выхода</span>") + "</td></tr>";
+    }).join("");
+
+    var banner = critical
+      ? "<div class='card' style='border-color:#f3c2c8;background:var(--red-pale)'><b style='color:var(--red)'>Переключение заблокировано:</b> не закрыты критичные контроли (" + (PROCESS.controls.rollback ? "" : "откат, ") + (PROCESS.controls.checkpoint ? "" : "критерий готовности") + ").</div>"
+      : "<div class='card' style='border-color:#cbe7d6;background:var(--green-pale)'><b style='color:var(--green)'>Процесс готов:</b> все контроли закрыты, можно назначать дату cut-over.</div>";
+
+    return head("Cut-over", "Полнота процесса переключения на ЦФТ-Банк: владелец шага, точка отката, окно простоя, критерий готовности. Незакрытые контроли блокируют дату.", "") +
+      '<div class="kpis">' + kpi("шагов", PROCESS.steps.length) + kpi("покрытие контролей", coverage + "%") +
+      kpi("пропусков в шагах", semantic.length) + kpi("критичных дыр", critical) + "</div>" + banner +
+      '<div class="cols" style="margin-top:18px">' +
+      "<div class='card'><div class='card-head'><h2>Контроли процесса</h2><span class='hint'>нажмите, чтобы закрыть</span></div>" + toggles + "</div>" +
+      "<div class='card'><div class='card-head'><h2>Шаги</h2><span class='hint'>BPMN · run " + esc(PROCESS.id) + "</span></div>" +
+      "<div style='overflow-x:auto'><table class='tbl'><thead><tr><th>Шаг</th><th>Название</th><th>Роль</th><th>Выход</th></tr></thead><tbody>" +
+      steps + "</tbody></table></div></div></div>";
+  }
+
+  function screenRag() {
+    var cards = state.chat.map(function (item) {
+      if (item.role === "q") { return "<div class='msg q'>" + esc(item.text) + "</div>"; }
+      var sources = item.sources && item.sources.length
+        ? "<div class='sources'>" + item.sources.map(function (src) { return "<span class='src'>" + esc(src) + "</span>"; }).join("") + "</div>"
+        : "";
+      return "<div class='msg a'>" + esc(item.text) + sources + "</div>";
+    }).join("");
+
+    var quick = ["Как закрыть счёт при блокировке?", "Куда переносим проценты на 47427?", "Пролонгация депозита", "Что такое криптобиржа?"];
+
+    return head("Ассистент по домену", "Поиск по регламентам РКО, кредитов и депозитов. Ответ строится только по найденным документам и всегда показывает источник; если источника нет — отказывается.", "") +
+      '<div class="cols"><div class="card"><div class="card-head"><h2>Диалог</h2><span class="hint">' + DOCS.length + " документов в индексе</span></div>" +
+      "<div class='chat' id='chat'>" + (cards || "<div class='empty'>Задайте вопрос по регламентам — ассистент ответит с ссылкой на документ.</div>") + "</div>" +
+      "<div class='field' style='margin-top:16px'><label>Вопрос</label><input type='text' id='chat-input' placeholder='Например: досрочное погашение кредита'></div>" +
+      "<div class='toolbar' style='margin-top:12px'><button class='btn' data-act='chat-send'>Спросить</button>" +
+      quick.map(function (text) { return "<button class='chip' data-act='chat-quick' data-q='" + esc(text) + "'>" + esc(text) + "</button>"; }).join("") +
+      "</div></div>" +
+      "<div class='card'><div class='card-head'><h2>Источники</h2></div><ul class='list'>" +
+      DOCS.map(function (doc) {
+        return "<li><div class='badge gray'>" + esc(doc.domain) + "</div><div><b class='mono'>" + esc(doc.id) + "</b><br>" + esc(doc.text) + "</div></li>";
+      }).join("") + "</ul></div></div>";
+  }
+
+  function screenTower() {
+    var totalProgress = DOMAINS.reduce(function (sum, domain) { return sum + domain.weight * domain.progress; }, 0);
+    var remain = 100 - Math.round(totalProgress * 100);
+    var average = DOMAINS[4].velocity.reduce(function (a, b) { return a + b; }, 0) / DOMAINS[4].velocity.length;
+    var weeks = Math.max(Math.round((100 - DOMAINS[4].progress * 100) / average), 0);
+    var forecast = new Date(2026, 10, 8 + weeks * 7);
+    var forecastText = forecast.toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" });
+
+    var rows = DOMAINS.map(function (domain) {
+      var score = riskScore(domain);
+      var status = riskStatus(score);
+      return "<tr><td class='name'>" + esc(domain.name) + "</td><td class='num'>" + domain.weight.toFixed(2) + "</td>" +
+        "<td><div class='meter'><div class='bar'><i class='green' style='width:" + Math.round(domain.progress * 100) + "%'></i></div><span class='num'>" + Math.round(domain.progress * 100) + "%</span></div></td>" +
+        "<td>" + domain.open_defects + "</td><td>" + domain.s2t_gaps + "</td><td>" + domain.dq_failed + "</td>" +
+        "<td><div class='meter'><div class='bar'><i class='" + (status === "risk" ? "" : status === "watch" ? "amber" : "green") + "' style='width:" + Math.round(score * 100) + "%'></i></div><span class='num'>" + score.toFixed(2) + "</span></div></td>" +
+        "<td><span class='badge " + status + "'>" + riskRu(score) + "</span></td></tr>";
+    }).join("");
+
+    return head("Готовность к волне", "Взвешенный прогресс по доменам, риск-скоринг по дефектам, пропускам карты данных и качеству, прогноз даты по скорости прошлых волн.", "") +
+      '<div class="kpis">' + kpi("готовность", pct(totalProgress)) + kpi("осталось", remain + "%") +
+      kpi("прогноз даты", forecastText) + kpi("доменов в риске", DOMAINS.filter(function (d) { return riskStatus(riskScore(d)) === "risk"; }).length) + "</div>" +
+      '<div class="card"><div class="card-head"><h2>Домены</h2><span class="hint">вес × прогресс = вклад в готовность</span></div>' +
+      "<div style='overflow-x:auto'><table class='tbl'><thead><tr><th>Домен</th><th>Вес</th><th>Прогресс</th><th>Дефекты</th><th>S2T</th><th>DQ</th><th>Риск</th><th>Статус</th></tr></thead><tbody>" +
+      rows + "</tbody></table></div></div>";
+  }
+
+  var RENDER = {
+    s2t: screenS2T, dq: screenDQ, reconcile: screenReconcile, rule2sql: screenRule2SQL,
+    postings: screenPostings, cutover: screenCutover, rag: screenRag, tower: screenTower
+  };
+
+  function renderNav() {
+    var nav = document.getElementById("nav");
+    nav.textContent = "";
+    SCREENS.forEach(function (screen) {
+      var button = el("button", "navitem" + (state.screen === screen.id ? " on" : ""));
+      button.type = "button";
+      button.dataset.screen = screen.id;
+      button.appendChild(el("i", null, screen.num));
+      button.appendChild(el("span", null, screen.name));
+      nav.appendChild(button);
+    });
+  }
+
+  function render() {
+    var screen = SCREENS.filter(function (item) { return item.id === state.screen; })[0];
+    document.getElementById("crumb-here").textContent = screen.name;
+    var view = document.getElementById("view");
+    view.innerHTML = RENDER[state.screen]();
+    renderNav();
+  }
+
+  document.getElementById("nav").addEventListener("click", function (event) {
+    var target = event.target.closest("[data-screen]");
+    if (!target) { return; }
+    state.screen = target.dataset.screen;
+    render();
+  });
+
+  function pushChat(question) {
+    var docs = retrieve(question, null);
+    state.chat.push({ role: "q", text: question });
+    state.chat.push({
+      role: "a",
+      text: docs.length ? "По документу «" + docs[0].id + "»: " + docs[0].text + "." : REFUSAL,
+      sources: docs.map(function (doc) { return doc.id; })
+    });
+    render();
+  }
+
+  document.getElementById("view").addEventListener("click", function (event) {
+    var target = event.target.closest("[data-act]");
+    if (!target) { return; }
+    var act = target.dataset.act;
+
+    if (act === "accept" || act === "reject") {
+      state.s2tStatus[target.dataset.id] = act === "accept" ? "confirmed" : "rejected";
+      render();
+    }
+    if (act === "dq-scan") { state.dqRan = true; render(); }
+    if (act === "filter") { state.reconcileFilter = target.dataset.cause; render(); }
+    if (act === "rule-compile" || act === "rule-sample") {
+      var field = document.getElementById("rule-text");
+      var text = act === "rule-sample" ? sampleRule(target.dataset.sample) : field.value;
+      if (act === "rule-sample" && field) { field.value = text; }
+      var key = ruleKeyword(text);
+      state.ruleSql = key ? { key: key } : null;
+      render();
+    }
+    if (act === "control") {
+      PROCESS.controls[target.dataset.key] = !PROCESS.controls[target.dataset.key];
+      render();
+    }
+    if (act === "chat-send") {
+      var input = document.getElementById("chat-input");
+      var question = input && input.value.trim();
+      if (question) { pushChat(question); }
+    }
+    if (act === "chat-quick") { pushChat(target.dataset.q); }
+    if (act === "reconcile-export") { target.textContent = "Выгружено: recon-wave-4.xlsx"; }
+  });
+
+  function sampleRule(key) {
+    var samples = {
+      deposit: "Депозит юридического лица: пролонгация и начисление процентов",
+      card: "Операции по карте без авторизации отправляем в карантин"
+    };
+    return samples[key] || samples.deposit;
+  }
+
+  render();
+  window.__app = { counts: counts, mapping: MAPPING, recon: RECON, risk: DOMAINS.map(riskScore), dq: dqIssues() };
+})();
+</script>
+</body>
+</html>
