@@ -228,7 +228,8 @@
   .taskbar{position:fixed;left:0;right:0;bottom:0;height:38px;background:rgba(238,241,246,.94);border-top:1px solid #d6dce6;display:flex;align-items:center;gap:8px;padding:0 12px;backdrop-filter:blur(8px);z-index:50}
   .task{display:flex;align-items:center;gap:8px;padding:5px 12px;border-radius:7px;background:#fff;border:1px solid #d9dfe9;font-size:12px;color:#3c424c;white-space:nowrap}
   .task:hover{border-color:#e6bcc2;color:var(--red)}
-  .task i{width:14px;height:14px;border-radius:4px;background:var(--red);display:block}
+  .task i{width:16px;height:16px;border-radius:4px;background:var(--red);color:#fff;display:grid;place-items:center;flex:0 0 16px}
+  .task i .ic{width:11px;height:11px;flex:0 0 11px;stroke-width:2.3}
   .clock{margin-left:auto;font-size:12px;color:#5b6270}
 
   .topo{width:100%;height:auto;display:block}
@@ -415,7 +416,7 @@
 
 <section class="float hidden" id="logwin" aria-label="Журнал волны">
   <div class="titlebar" style="height:34px;flex:0 0 34px">
-    <div class="tleft"><span class="appico" style="background:#3c424c">LOG</span><b>Журнал волны 5</b></div>
+    <div class="tleft"><span class="appico" style="background:#3c424c"><svg class="ic" aria-hidden="true"><use href="#i-log"/></svg></span><b>Журнал волны 5</b></div>
     <div class="tright">
       <button class="cap" data-log="clear" aria-label="Очистить журнал">⌫</button>
       <button class="cap close" data-log="close" aria-label="Закрыть журнал">✕</button>
@@ -2005,13 +2006,14 @@
   function renderTaskbar() {
     var bar = document.getElementById("taskbar");
     bar.textContent = "";
-    [["main", "АБС-Миграция 2.4", "#d82335"], ["log", "Журнал волны", "#3c424c"]].forEach(function (item) {
+    [["main", "АБС-Миграция 2.4", "#d82335", "i-layers"], ["log", "Журнал волны", "#3c424c", "i-log"]].forEach(function (item) {
       var button = document.createElement("button");
       button.type = "button";
       button.className = "task";
       button.dataset.task = item[0];
       var ico = document.createElement("i");
       ico.style.background = item[2];
+      ico.innerHTML = '<svg class="ic" aria-hidden="true"><use href="#' + item[3] + '"/></svg>';
       button.appendChild(ico);
       button.appendChild(document.createTextNode(item[1]));
       bar.appendChild(button);
