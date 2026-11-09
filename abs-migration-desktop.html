@@ -41,6 +41,11 @@
   input,select{font:inherit;color:inherit}
   :focus-visible{outline:2px solid rgba(216,35,53,.45);outline-offset:2px}
   .mono{font-family:"Cascadia Mono",Consolas,Menlo,monospace;font-size:13px}
+  .ic{width:16px;height:16px;flex:0 0 16px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;display:inline-block;vertical-align:middle}
+  .nav .ic{color:#98a0ad;transition:color .15s ease}
+  .nav:hover .ic,.nav.on .ic{color:var(--red)}
+  .tb-btn .ic{width:15px;height:15px;flex:0 0 15px}
+  .btn .ic{width:14px;height:14px;flex:0 0 14px}
   .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
 
   .desk{position:fixed;inset:0;display:flex;flex-direction:column;padding:18px 18px 46px;transition:padding .18s ease}
@@ -220,17 +225,49 @@
   .copy{font-size:11.5px;color:var(--muted)}
   .copy:hover{color:var(--red)}
 
-  .gate{position:fixed;inset:0;z-index:70;display:grid;place-items:center;padding:20px;background:rgba(23,28,42,.45);backdrop-filter:blur(3px)}
+  .gate{position:fixed;inset:0;z-index:70;display:grid;place-items:center;padding:20px;
+    background:radial-gradient(700px 420px at 20% 0%, rgba(216,35,53,.18), rgba(216,35,53,0) 60%),
+               radial-gradient(700px 460px at 90% 100%, rgba(59,115,158,.16), rgba(59,115,158,0) 62%),
+               rgba(23,28,42,.52);backdrop-filter:blur(4px)}
   .gate.hidden{display:none}
-  .gate-card{width:420px;max-width:100%;background:#fff;border:1px solid #cfd5e0;border-radius:12px;box-shadow:0 30px 70px rgba(23,28,42,.4);padding:24px;display:grid;gap:12px}
-  .gate-brand{display:flex;align-items:center;gap:10px}
-  .gate-brand b{font-size:15px;color:var(--ink)}
-  .gate-sub{font-size:12.5px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
-  .gate-card label{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600}
-  .gate-card input{width:100%;border:1px solid var(--line);border-radius:8px;padding:9px 12px;font-size:14px;background:#fbfcfe}
-  .gate-card input:focus{outline:2px solid #f3c2c8;border-color:#eab6bd;background:#fff}
-  .gate-roles{display:flex;gap:6px;flex-wrap:wrap}
-  .gate-note{font-size:11.5px;color:var(--muted);min-height:16px}
+  .gate-card{width:474px;max-width:100%;background:#fff;border:1px solid #cfd5e0;border-radius:16px;
+    box-shadow:0 34px 80px rgba(23,28,42,.45);padding:26px;display:grid;gap:16px;animation:gateIn .22s ease}
+  @keyframes gateIn{from{opacity:0;transform:translateY(10px) scale(.985)}to{opacity:1;transform:none}}
+  .gate-brand{display:flex;align-items:center;gap:12px}
+  .gate-logo{width:42px;height:42px;border-radius:12px;background:var(--red);color:#fff;display:grid;place-items:center;flex:0 0 42px}
+  .gate-logo .ic{width:22px;height:22px;stroke-width:1.7}
+  .gate-brand b{display:block;font-size:16px;color:var(--ink)}
+  .gate-brand span{display:block;font-size:11.5px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;margin-top:2px}
+  .gate-roles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .role{border:1px solid var(--line);background:#fff;border-radius:12px;padding:12px 10px;display:grid;gap:6px;justify-items:start;text-align:left;transition:all .15s ease}
+  .role:hover{border-color:#e8b9c0;background:#fffdfd}
+  .role .ic{width:18px;height:18px;color:var(--red)}
+  .role b{font-size:12.5px;color:var(--ink)}
+  .role span{font-size:10.5px;color:var(--muted);line-height:1.3}
+  .role.on{border-color:var(--red);background:var(--red-pale);box-shadow:0 6px 18px rgba(216,35,53,.12)}
+  .gate-fields{display:grid;gap:10px}
+  .gate-fields label{display:grid;gap:5px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600}
+  .gate-fields input{width:100%;border:1px solid var(--line);border-radius:9px;padding:10px 12px;font-size:14px;background:#fbfcfe;color:var(--ink)}
+  .gate-fields input:focus{outline:2px solid #f3c2c8;border-color:#eab6bd;background:#fff}
+  .gate-submit{justify-content:center;width:100%;padding:11px 16px;font-size:14px;border-radius:9px}
+  .gate-submit .spin,.loader .spin{animation:spin 1s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .linkish{font-size:12.5px;color:var(--red);text-align:center;padding:2px}
+  .linkish:hover{text-decoration:underline}
+  .gate-note{font-size:11.5px;color:var(--muted);min-height:15px;line-height:1.45}
+  .gate-note.err{color:var(--red)}
+  .gate-card.shake{animation:shake .3s ease}
+  @keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+  .loader{position:fixed;inset:0;z-index:75;display:grid;place-items:center;background:rgba(247,248,252,.86);backdrop-filter:blur(2px)}
+  .loader.hidden{display:none}
+  .loader-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px 26px;width:320px;
+    box-shadow:0 24px 60px rgba(23,28,42,.18);display:grid;gap:10px;justify-items:center;text-align:center}
+  .loader-card .ic{width:22px;height:22px;color:var(--red)}
+  .loader-card b{font-size:14px;color:var(--ink)}
+  .loader-card span{font-size:12px;color:var(--muted)}
+  .loader-bar{width:100%;height:4px;border-radius:999px;background:#f0f2f7;overflow:hidden}
+  .loader-bar i{display:block;height:100%;width:38%;background:var(--red);border-radius:999px;animation:slide 1.1s ease-in-out infinite}
+  @keyframes slide{0%{transform:translateX(-110%)}100%{transform:translateX(320%)}}
   .userchip{display:flex;align-items:center;gap:8px;padding-left:10px;border-left:1px solid var(--line-soft);margin-left:2px}
   .userchip.hidden{display:none}
   .uchip-name{font-size:12.5px;color:var(--ink);font-weight:600;line-height:1.2}
@@ -272,6 +309,27 @@
 </style>
 </head>
 <body>
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true" focusable="false">
+  <symbol id="i-map" viewBox="0 0 24 24"><path d="M3 6.5L9 4l6 2.5L21 4v13l-6 2.5L9 17l-6 2.5z"/><path d="M9 4v13M15 6.5v13"/></symbol>
+  <symbol id="i-quality" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M8 11l2.2 2.2L15 9"/><path d="M20 15.5l.7 1.5 1.5.7-1.5.7-.7 1.5-.7-1.5-1.5-.7 1.5-.7z"/></symbol>
+  <symbol id="i-recon" viewBox="0 0 24 24"><path d="M3 8h13M3 8l3.2-3.2M3 8l3.2 3.2"/><path d="M21 16H8M21 16l-3.2-3.2M21 16l-3.2 3.2"/></symbol>
+  <symbol id="i-rules" viewBox="0 0 24 24"><path d="M9 7.5L4.5 12 9 16.5"/><path d="M15 7.5L19.5 12 15 16.5"/><path d="M13 5l-2 14"/></symbol>
+  <symbol id="i-postings" viewBox="0 0 24 24"><rect x="4.5" y="3.5" width="15" height="17" rx="2"/><path d="M8 8.5h8M8 12.5h8M8 16.5h5"/></symbol>
+  <symbol id="i-cutover" viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.2"/><circle cx="18" cy="12" r="2.2"/><circle cx="6" cy="18" r="2.2"/><path d="M8.2 6h6.6a1.2 1.2 0 011.2 1.2V10M8.2 18h6.6a1.2 1.2 0 001.2-1.2V14"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M4 5.5h16v10.5H9.5L4 20z"/><path d="M8 10h8M8 13h5"/></symbol>
+  <symbol id="i-tower" viewBox="0 0 24 24"><path d="M4 19V10M9.5 19V5.5M15 19v-6.5M20.5 19V8"/><path d="M2.5 19h19"/></symbol>
+  <symbol id="i-services" viewBox="0 0 24 24"><rect x="4" y="4.5" width="16" height="6" rx="2"/><rect x="4" y="13.5" width="16" height="6" rx="2"/><path d="M7.5 7.5h.01M7.5 16.5h.01"/></symbol>
+  <symbol id="i-audit" viewBox="0 0 24 24"><path d="M6 3.5h8l4 4v13H6z"/><path d="M14 3.5v4h4"/><path d="M9 12h6M9 15.5h6M9 19h4"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.5l10 6.5-10 6.5z"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 12a8 8 0 10-2.6 5.9"/><path d="M20 6.5v5.5h-5.5"/></symbol>
+  <symbol id="i-log" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 10l3 2-3 2M12.5 14H17"/></symbol>
+  <symbol id="i-topology" viewBox="0 0 24 24"><circle cx="6" cy="7" r="2.2"/><circle cx="18" cy="7" r="2.2"/><circle cx="12" cy="17" r="2.2"/><path d="M8.2 7h7.6M7.4 9l3.6 5.9M16.6 9l-3.6 5.9"/></symbol>
+  <symbol id="i-csv" viewBox="0 0 24 24"><path d="M6.5 3.5h8l4 4v13h-12z"/><path d="M14.5 3.5v4h4"/><path d="M9.5 12.5h6M9.5 16h6"/></symbol>
+  <symbol id="i-api" viewBox="0 0 24 24"><path d="M9 3.5v4M15 3.5v4"/><path d="M6.5 7.5h11v4a5.5 5.5 0 01-11 0z"/><path d="M12 17v3.5"/></symbol>
+  <symbol id="i-logout" viewBox="0 0 24 24"><path d="M14 4.5H6v15h8"/><path d="M11 12h9.5M17.5 8.8L20.7 12l-3.2 3.2"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l7 2.5v6c0 4.2-2.9 7.6-7 9.5-4.1-1.9-7-5.3-7-9.5v-6z"/><path d="M9 11.8l2.2 2.2L15.5 10"/></symbol>
+</svg>
+
 <h1 class="sr-only">АБС-Миграция 2.4 — АРМ системного аналитика миграции банковских данных</h1>
 
 <div class="desk">
@@ -292,18 +350,18 @@
     <div class="menubar" id="menubar"></div>
 
     <div class="toolbar">
-      <button class="tb-btn primary" data-act="run-wave">▶ Запустить загрузку</button>
-      <button class="tb-btn" data-act="reconcile">⇄ Сверка</button>
-      <button class="tb-btn" data-act="open-log">Журнал</button>
+      <button class="tb-btn primary" data-act="run-wave"><svg class="ic" aria-hidden="true"><use href="#i-play"/></svg>Запустить загрузку</button>
+      <button class="tb-btn" data-act="reconcile"><svg class="ic" aria-hidden="true"><use href="#i-recon"/></svg>Сверка</button>
+      <button class="tb-btn" data-act="open-log"><svg class="ic" aria-hidden="true"><use href="#i-log"/></svg>Журнал</button>
       <span class="tb-sep"></span>
       <div class="waves" id="waves"></div>
       <span class="tb-sep"></span>
-      <button class="tb-btn" data-act="go-svc">Топология</button>
-      <button class="tb-btn" data-act="csv">CSV</button>
-      <button class="tb-btn" data-act="connect" title="Переподключиться к FastAPI">⇅ API</button>
+      <button class="tb-btn" data-act="go-svc"><svg class="ic" aria-hidden="true"><use href="#i-topology"/></svg>Топология</button>
+      <button class="tb-btn" data-act="csv"><svg class="ic" aria-hidden="true"><use href="#i-csv"/></svg>CSV</button>
+      <button class="tb-btn" data-act="connect" title="Переподключиться к FastAPI"><svg class="ic" aria-hidden="true"><use href="#i-api"/></svg>API</button>
       <div class="tb-field">
         <input type="text" id="q" placeholder="Поиск по счетам, полям, документам" aria-label="Поиск">
-        <button class="tb-btn" data-act="refresh" aria-label="Обновить данные">⟳</button>
+        <button class="tb-btn" data-act="refresh" aria-label="Обновить данные"><svg class="ic" aria-hidden="true"><use href="#i-refresh"/></svg></button>
       </div>
       <div class="userchip hidden" id="userchip"></div>
     </div>
@@ -329,7 +387,7 @@
   </section>
 </div>
 
-<section class="float" id="logwin" aria-label="Журнал волны">
+<section class="float hidden" id="logwin" aria-label="Журнал волны">
   <div class="titlebar" style="height:34px;flex:0 0 34px">
     <div class="tleft"><span class="appico" style="background:#3c424c">LOG</span><b>Журнал волны 5</b></div>
     <div class="tright">
@@ -375,27 +433,40 @@
 </div>
 
 <div class="gate hidden" id="gate" role="dialog" aria-modal="true" aria-labelledby="gate-title">
-  <div class="gate-card">
-    <div class="gate-brand"><span class="appico">АБС</span><b id="gate-title">АБС-Миграция 2.4 · вход</b></div>
-    <div class="gate-sub">Роли: аналитик · архитектор · аудитор</div>
-    <div class="gate-roles">
-      <button class="chip" data-act="role" data-user="analyst">Аналитик</button>
-      <button class="chip" data-act="role" data-user="architect">Архитектор</button>
-      <button class="chip" data-act="role" data-user="auditor">Аудитор</button>
+  <div class="gate-card" id="gate-card">
+    <div class="gate-brand">
+      <span class="gate-logo"><svg class="ic" aria-hidden="true"><use href="#i-shield"/></svg></span>
+      <div><b id="gate-title">АБС-Миграция 2.4</b><span>вход в контур миграции</span></div>
     </div>
-    <div>
-      <label for="login-user">Пользователь</label>
-      <input id="login-user" type="text" value="analyst" autocomplete="username">
+    <div class="gate-roles" id="gate-roles">
+      <button class="role on" type="button" data-act="role" data-user="analyst">
+        <svg class="ic" aria-hidden="true"><use href="#i-map"/></svg><b>Аналитик</b><span>карта, качество, правила</span>
+      </button>
+      <button class="role" type="button" data-act="role" data-user="architect">
+        <svg class="ic" aria-hidden="true"><use href="#i-topology"/></svg><b>Архитектор</b><span>волны, cut-over, аудит</span>
+      </button>
+      <button class="role" type="button" data-act="role" data-user="auditor">
+        <svg class="ic" aria-hidden="true"><use href="#i-audit"/></svg><b>Аудитор</b><span>чтение и журнал</span>
+      </button>
     </div>
-    <div>
-      <label for="login-pass">Пароль</label>
-      <input id="login-pass" type="password" value="analyst123" autocomplete="current-password">
+    <div class="gate-fields">
+      <label for="login-user">Пользователь<input id="login-user" type="text" value="analyst" autocomplete="username"></label>
+      <label for="login-pass">Пароль<input id="login-pass" type="password" value="analyst123" autocomplete="current-password"></label>
     </div>
-    <div class="toolbar-inline">
-      <button class="btn" data-act="login">Войти</button>
-      <button class="btn quiet" data-act="login-demo">Демо-режим</button>
-    </div>
+    <button class="btn gate-submit" type="button" data-act="login" id="login-btn">
+      <svg class="ic" id="login-icon" aria-hidden="true"><use href="#i-shield"/></svg><span id="login-label">Войти</span>
+    </button>
+    <button class="linkish" type="button" data-act="login-demo">Продолжить в демо-режиме без API</button>
     <div class="gate-note" id="gate-note">analyst / analyst123 · architect / architect123 · auditor / auditor123</div>
+  </div>
+</div>
+
+<div class="loader hidden" id="loader" role="status" aria-live="polite">
+  <div class="loader-card">
+    <svg class="ic spin" aria-hidden="true"><use href="#i-refresh"/></svg>
+    <b id="loader-title">Подключаюсь к API</b>
+    <span id="loader-step">проверяю шлюз</span>
+    <div class="loader-bar"><i></i></div>
   </div>
 </div>
 
@@ -407,16 +478,16 @@
   "use strict";
 
   var SCREENS = [
-    { id: "map", num: "01", name: "Карта данных", group: "Данные" },
-    { id: "dq", num: "02", name: "Качество данных", group: "Данные" },
-    { id: "recon", num: "03", name: "Сверка остатков", group: "Данные" },
-    { id: "rules", num: "04", name: "Правила → SQL", group: "Процессы" },
-    { id: "post", num: "05", name: "Проводки", group: "Процессы" },
-    { id: "cutover", num: "06", name: "Cut-over", group: "Процессы" },
-    { id: "chat", num: "07", name: "Ассистент", group: "Аналитика" },
-    { id: "tower", num: "08", name: "Готовность", group: "Аналитика" },
-    { id: "svc", num: "09", name: "Микросервисы", group: "Аналитика" },
-    { id: "audit", num: "10", name: "Аудит", group: "Аналитика" }
+    { id: "map", num: "01", name: "Карта данных", group: "Данные", icon: "i-map" },
+    { id: "dq", num: "02", name: "Качество данных", group: "Данные", icon: "i-quality" },
+    { id: "recon", num: "03", name: "Сверка остатков", group: "Данные", icon: "i-recon" },
+    { id: "rules", num: "04", name: "Правила → SQL", group: "Процессы", icon: "i-rules" },
+    { id: "post", num: "05", name: "Проводки", group: "Процессы", icon: "i-postings" },
+    { id: "cutover", num: "06", name: "Cut-over", group: "Процессы", icon: "i-cutover" },
+    { id: "chat", num: "07", name: "Ассистент", group: "Аналитика", icon: "i-chat" },
+    { id: "tower", num: "08", name: "Готовность", group: "Аналитика", icon: "i-tower" },
+    { id: "svc", num: "09", name: "Микросервисы", group: "Аналитика", icon: "i-services" },
+    { id: "audit", num: "10", name: "Аудит", group: "Аналитика", icon: "i-audit" }
   ];
 
   var MENUS = [
@@ -699,7 +770,7 @@
   function apiCall(path, options) {
     var init = options || {};
     var controller = typeof AbortController !== "undefined" ? new AbortController() : null;
-    var timer = setTimeout(function () { if (controller) { controller.abort(); } }, 2500);
+    var timer = setTimeout(function () { if (controller) { controller.abort(); } }, 5000);
     var headers = { "Content-Type": "application/json" };
     if (state.token) { headers.Authorization = "Bearer " + state.token; }
     return fetch(API_BASE + path, {
@@ -763,16 +834,34 @@
     });
   }
 
+  function showLoader(title, step) {
+    var box = document.getElementById("loader");
+    var head = document.getElementById("loader-title");
+    var line = document.getElementById("loader-step");
+    if (head) { head.textContent = title; }
+    if (line) { line.textContent = step; }
+    if (box) { box.classList.remove("hidden"); }
+    return null;
+  }
+
+  function hideLoader() {
+    var box = document.getElementById("loader");
+    if (box) { box.classList.add("hidden"); }
+    return null;
+  }
+
   function bootstrap() {
     var started = Date.now();
+    showLoader("Подключаюсь к API", "проверяю шлюз");
     return apiCall("/health").then(function (health) {
       state.mode = "live";
       state.version = health.version;
       state.latency = Date.now() - started;
-      if (!state.token) { showLogin(); return null; }
+      if (!state.token) { hideLoader(); showLogin(); return null; }
       return loadAll();
     }).catch(function (error) {
       state.mode = "demo";
+      hideLoader();
       hideGate();
       logLine("info", "gateway", "API недоступен (" + (error && error.name ? error.name : "offline") + ") — демо-режим");
       render();
@@ -780,20 +869,33 @@
   }
 
   function loadAll() {
-    return Promise.all([
-      apiCall("/s2t/fields?wave=" + state.wave).then(applyMapping),
-      apiCall("/recon/" + state.wave).then(applyRecon),
-      apiCall("/postings/balance").then(applyPostings),
-      apiCall("/rules").then(applyRules),
-      apiCall("/tower/readiness").then(applyDomains),
-      apiCall("/services").then(applyServices),
-      apiCall("/waves").then(applyWaves),
-      apiCall("/docs").then(applyDocs)
-    ]).then(function () {
+    showLoader("Загружаю данные", "карта, сверка, правила, готовность");
+    var tasks = [
+      ["/s2t/fields?wave=" + state.wave, applyMapping],
+      ["/recon/" + state.wave, applyRecon],
+      ["/postings/balance", applyPostings],
+      ["/rules", applyRules],
+      ["/tower/readiness", applyDomains],
+      ["/services", applyServices],
+      ["/waves", applyWaves],
+      ["/docs", applyDocs]
+    ];
+    var failed = 0;
+    return Promise.all(tasks.map(function (task) {
+      return apiCall(task[0]).then(function (payload) {
+        task[1](payload);
+        return true;
+      }).catch(function () {
+        failed += 1;
+        return false;
+      });
+    })).then(function () {
+      hideLoader();
       hideGate();
       startTelemetry();
       logLine("ok", "gateway", "live-режим: API " + API_BASE + " · " + state.latency + " ms");
       render();
+      if (failed) { toast("Часть сервисов ответила не сразу: " + failed + " из " + tasks.length, "warn"); }
       return null;
     });
   }
@@ -801,10 +903,30 @@
   function showLogin() {
     var gate = document.getElementById("gate");
     var note = document.getElementById("gate-note");
-    if (note) { note.textContent = "analyst / analyst123 · architect / architect123 · auditor / auditor123"; }
+    hideLoader();
+    if (note) { note.classList.remove("err"); note.textContent = "analyst / analyst123 · architect / architect123 · auditor / auditor123"; }
     if (gate) { gate.classList.remove("hidden"); }
     var field = document.getElementById("login-user");
     if (field) { field.focus(); }
+    syncRoleTiles();
+  }
+
+  function syncRoleTiles() {
+    var field = document.getElementById("login-user");
+    var current = field ? field.value.trim() : "";
+    Array.prototype.forEach.call(document.querySelectorAll("#gate-roles .role"), function (tile) {
+      tile.classList.toggle("on", tile.dataset.user === current);
+    });
+  }
+
+  function loginPending(pending) {
+    var button = document.getElementById("login-btn");
+    var label = document.getElementById("login-label");
+    var icon = document.getElementById("login-icon");
+    if (!button || !label || !icon) { return; }
+    button.disabled = pending;
+    label.textContent = pending ? "Проверяю…" : "Войти";
+    icon.classList.toggle("spin", pending);
   }
 
   function hideGate() {
@@ -815,18 +937,27 @@
   function doLogin() {
     var user = document.getElementById("login-user").value.trim();
     var password = document.getElementById("login-pass").value;
+    loginPending(true);
     apiCall("/auth/login", { method: "POST", body: { user: user, password: password } }).then(function (session) {
       state.token = session.token;
       state.user = { name: session.name, login: session.user, role: session.role, role_title: session.role_title };
       state.perms = session.perms;
+      loginPending(false);
       hideGate();
       renderUser();
       loadAll();
       toast("Вход выполнен: " + session.name + " · " + session.role_title);
       logLine("ok", "gateway", "вход " + session.user + " (" + session.role + ")");
     }).catch(function () {
+      loginPending(false);
       var note = document.getElementById("gate-note");
-      if (note) { note.textContent = "Неверный логин или пароль"; }
+      var card = document.getElementById("gate-card");
+      if (note) { note.classList.add("err"); note.textContent = "Неверный логин или пароль — попробуйте ещё раз"; }
+      if (card) {
+        card.classList.remove("shake");
+        void card.offsetWidth;
+        card.classList.add("shake");
+      }
     });
   }
 
@@ -1284,10 +1415,15 @@
         button.type = "button";
         button.className = "nav" + (state.screen === screen.id ? " on" : "");
         button.dataset.screen = screen.id;
-        var num = document.createElement("i");
-        num.textContent = screen.num;
-        button.appendChild(num);
+        var icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        icon.setAttribute("class", "ic");
+        icon.setAttribute("aria-hidden", "true");
+        var use = document.createElementNS("http://www.w3.org/2000/svg", "use");
+        use.setAttribute("href", "#" + (screen.icon || "i-map"));
+        icon.appendChild(use);
+        button.appendChild(icon);
         button.appendChild(document.createTextNode(screen.name));
+        button.title = screen.num + " · " + screen.name;
         if (COUNTERS[screen.id] && COUNTERS[screen.id]()) {
           var cnt = document.createElement("span");
           cnt.className = "cnt hot";
@@ -1697,9 +1833,8 @@
     if (act === "role") {
       document.getElementById("login-user").value = target.dataset.user;
       document.getElementById("login-pass").value = target.dataset.user + "123";
-      Array.prototype.forEach.call(document.querySelectorAll(".gate-roles .chip"), function (chip) {
-        chip.classList.toggle("on", chip === target);
-      });
+      syncRoleTiles();
+      document.getElementById("login-pass").focus();
     }
     if (act === "login") { doLogin(); }
     if (act === "login-demo") {
