@@ -39,7 +39,7 @@
   p{margin:0}
   button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
   input,select{font:inherit;color:inherit}
-  :focus-visible{outline:2px solid rgba(216,35,53,.45);outline-offset:2px}
+  :focus{outline:0}
   .mono{font-family:"Cascadia Mono",Consolas,Menlo,monospace;font-size:13px}
   .ic{width:16px;height:16px;flex:0 0 16px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;display:inline-block;vertical-align:middle}
   .nav .ic{color:#98a0ad;transition:color .15s ease}
@@ -260,7 +260,7 @@
   .gate-fields{display:grid;gap:10px}
   .gate-fields label{display:grid;gap:5px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600}
   .gate-fields input{width:100%;border:1px solid var(--line);border-radius:9px;padding:10px 12px;font-size:14px;background:#fbfcfe;color:var(--ink)}
-  .gate-fields input:focus{outline:2px solid #f3c2c8;border-color:#eab6bd;background:#fff}
+  .gate-fields input:focus{outline:0;border-color:#e2a6af;background:#fff}
   .gate-submit{justify-content:center;width:100%;padding:11px 16px;font-size:14px;border-radius:9px}
   .gate-submit .spin,.loader .spin{animation:spin 1s linear infinite}
   @keyframes spin{to{transform:rotate(360deg)}}
@@ -311,7 +311,7 @@
     .rail{display:flex;flex-wrap:wrap;gap:4px;overflow:visible;border-right:0;border-bottom:1px solid var(--line-soft);padding:6px}
     .rail .group{display:none}
     .nav{width:auto;flex:0 0 auto;white-space:nowrap;border-left:0;border-bottom:2px solid transparent;padding:6px 8px;border-radius:6px}
-    .nav.on{border-left:0;border-bottom-color:var(--red)}
+    .nav.on{border-left:0}
     .nav .cnt{display:none}
     .pane{padding:16px}
     .toolbar{height:auto;padding:8px 10px;flex-wrap:wrap;gap:6px;overflow:visible}
