@@ -22,7 +22,7 @@
     --paper:#fff;
     --chrome:#eef1f6;
     --radius:10px;
-    --shadow-win:0 28px 70px rgba(23,28,42,.32), 0 2px 8px rgba(23,28,42,.12);
+    --shadow-win:none;
   }
   *{box-sizing:border-box}
   html,body{height:100%}
@@ -69,7 +69,7 @@
   .menu{position:relative}
   .menu > button{padding:5px 11px;border-radius:6px;font-size:14px;color:#3c424c}
   .menu > button:hover,.menu.open > button{background:#eceff5;color:var(--ink)}
-  .dropdown{position:absolute;top:100%;left:0;min-width:250px;background:#fff;border:1px solid var(--line);border-radius:8px;box-shadow:0 18px 40px rgba(23,28,42,.18);padding:6px;display:none}
+  .dropdown{position:absolute;top:100%;left:0;min-width:250px;background:#fff;border:1px solid var(--line);border-radius:8px;box-shadow:none;padding:6px;display:none}
   .menu.open .dropdown{display:block}
   .dropdown button{display:flex;justify-content:space-between;gap:20px;width:100%;text-align:left;padding:8px 10px;border-radius:6px;font-size:14px;color:#3c424c}
   .dropdown button:hover{background:var(--red-pale);color:var(--red)}
@@ -86,7 +86,7 @@
   .tb-sep{width:1px;height:26px;background:var(--line-soft);margin:0 3px}
   .waves{display:flex;gap:4px;padding:3px;background:#f4f6fa;border:1px solid var(--line-soft);border-radius:9px}
   .wave{font-size:12.5px;padding:4px 10px;border-radius:6px;color:#5b6270}
-  .wave.on{background:#fff;color:var(--red);font-weight:600;box-shadow:0 1px 3px rgba(23,28,42,.12)}
+  .wave.on{background:#fff;color:var(--red);font-weight:600;box-shadow:none}
   .tb-field{display:flex;align-items:center;gap:8px;margin-left:auto}
   .tb-field input{border:1px solid var(--line);border-radius:8px;padding:7px 12px;font-size:13.5px;width:280px;background:#fbfcfe}
 
@@ -190,7 +190,7 @@
   .jobbar{display:flex;align-items:center;gap:8px;font-size:11.5px}
   .jobbar .bar{width:96px;height:5px}
 
-  .float{position:fixed;right:42px;bottom:74px;width:540px;max-width:calc(100% - 36px);background:#fff;border:1px solid #cfd5e0;border-radius:10px;box-shadow:0 24px 60px rgba(23,28,42,.28);display:flex;flex-direction:column;overflow:hidden;z-index:40}
+  .float{position:fixed;right:42px;bottom:74px;width:540px;max-width:calc(100% - 36px);background:#fff;border:1px solid #cfd5e0;border-radius:10px;box-shadow:none;display:flex;flex-direction:column;overflow:hidden;z-index:40}
   .float.hidden{display:none}
   .float .log{background:#1f2229;color:#d6dae2;padding:12px 14px;height:196px;overflow:auto;font-family:"Cascadia Mono",Consolas,Menlo,monospace;font-size:12px;line-height:1.7}
   .float .log b{color:#ff8e9b;font-weight:600}
@@ -199,7 +199,7 @@
 
   .modal{position:fixed;inset:0;background:rgba(23,28,42,.34);display:none;place-items:center;z-index:60;padding:20px;overflow:auto}
   .modal.on{display:grid}
-  .dialog{width:100%;max-width:580px;background:#fff;border:1px solid #cfd5e0;border-radius:12px;box-shadow:0 30px 70px rgba(23,28,42,.35);overflow:hidden;min-width:0}
+  .dialog{width:100%;max-width:580px;background:#fff;border:1px solid #cfd5e0;border-radius:12px;box-shadow:none;overflow:hidden;min-width:0}
   .dialog.wide{max-width:680px}
   .dhead{padding:15px 20px;border-bottom:1px solid var(--line-soft);display:flex;justify-content:space-between;align-items:center;gap:12px}
   .dhead h3{font-size:16px}
@@ -215,7 +215,7 @@
   .kv dd.mono{font-size:12.5px}
 
   .toasts{position:fixed;right:18px;top:70px;z-index:90;display:flex;flex-direction:column;gap:8px;pointer-events:none;max-width:calc(100% - 36px)}
-  .toast{background:#fff;border:1px solid var(--line);border-left:3px solid var(--green);border-radius:8px;padding:10px 14px;box-shadow:0 12px 30px rgba(23,28,42,.16);font-size:13px;color:#33383d;min-width:260px;max-width:100%;animation:toastIn .18s ease}
+  .toast{background:#fff;border:1px solid var(--line);border-left:3px solid var(--green);border-radius:8px;padding:10px 14px;box-shadow:none;font-size:13px;color:#33383d;min-width:260px;max-width:100%;animation:toastIn .18s ease}
   .toast.warn{border-left-color:#dfa63c}
   .toast.err{border-left-color:var(--red)}
   @keyframes toastIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
@@ -237,7 +237,7 @@
                rgba(23,28,42,.52);backdrop-filter:blur(4px)}
   .gate.hidden{display:none}
   .gate-card{width:474px;max-width:100%;background:#fff;border:1px solid #cfd5e0;border-radius:16px;
-    box-shadow:0 34px 80px rgba(23,28,42,.45);padding:26px;display:grid;gap:16px;animation:gateIn .22s ease}
+    box-shadow:none;padding:26px;display:grid;gap:16px;animation:gateIn .22s ease}
   @keyframes gateIn{from{opacity:0;transform:translateY(10px) scale(.985)}to{opacity:1;transform:none}}
   .gate-brand{display:flex;align-items:center;gap:12px}
   .gate-logo{width:42px;height:42px;border-radius:12px;background:var(--red);color:#fff;display:grid;place-items:center;flex:0 0 42px}
@@ -250,7 +250,7 @@
   .role .ic{width:18px;height:18px;color:var(--red)}
   .role b{font-size:12.5px;color:var(--ink)}
   .role span{font-size:10.5px;color:var(--muted);line-height:1.3}
-  .role.on{border-color:var(--red);background:var(--red-pale);box-shadow:0 6px 18px rgba(216,35,53,.12)}
+  .role.on{border-color:var(--red);background:var(--red-pale);box-shadow:none}
   .gate-fields{display:grid;gap:10px}
   .gate-fields label{display:grid;gap:5px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600}
   .gate-fields input{width:100%;border:1px solid var(--line);border-radius:9px;padding:10px 12px;font-size:14px;background:#fbfcfe;color:var(--ink)}
@@ -267,7 +267,7 @@
   .loader{position:fixed;inset:0;z-index:75;display:grid;place-items:center;background:rgba(247,248,252,.86);backdrop-filter:blur(2px)}
   .loader.hidden{display:none}
   .loader-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px 26px;width:320px;
-    box-shadow:0 24px 60px rgba(23,28,42,.18);display:grid;gap:10px;justify-items:center;text-align:center}
+    box-shadow:none;display:grid;gap:10px;justify-items:center;text-align:center}
   .loader-card .ic{width:22px;height:22px;color:var(--red)}
   .loader-card b{font-size:14px;color:var(--ink)}
   .loader-card span{font-size:12px;color:var(--muted)}
